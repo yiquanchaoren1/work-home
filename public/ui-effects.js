@@ -1,4 +1,5 @@
 // Small, local effects. No remote fonts, animation runtime or browser storage.
+import {installPointerEffects} from './pointer-effects.js';
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const counters=new Map();
 
@@ -32,16 +33,5 @@ export function animateReorder(container,move,excluded) {
 }
 
 export function installSpotlight() {
-  let frame=0,pending,previous;
-  document.addEventListener('pointermove',event=>{
-    if(event.pointerType==='touch'||reduced()||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
-    const card=event.target.closest?.('[data-spotlight]');
-    if(previous&&previous!==card)previous.classList.remove('spot-lit');
-    previous=card;
-    if(!card)return;
-    pending={card,x:event.clientX,y:event.clientY};
-    if(frame)return;
-    frame=requestAnimationFrame(()=>{frame=0;const {card,x,y}=pending;if(!card.isConnected)return;const rect=card.getBoundingClientRect();card.style.setProperty('--spot-x',`${x-rect.left}px`);card.style.setProperty('--spot-y',`${y-rect.top}px`);card.classList.add('spot-lit');});
-  },{passive:true});
-  document.addEventListener('pointerout',event=>{if(previous&&!previous.contains(event.relatedTarget)){previous.classList.remove('spot-lit');previous=undefined;}},{passive:true});
+  return installPointerEffects();
 }

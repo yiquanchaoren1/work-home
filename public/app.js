@@ -5,7 +5,7 @@ import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWor
 import { createPersonalUI } from './personal-ui.js?v=studio-20261017';
 import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
-import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=studio-20261017';
+import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=pointer-20261017';
 import { installAppPanel } from './install-app.js';
 import { cloudConnectionPanel,refreshConnectionPanel } from './cloud-session.js';
 import { renderStudioDashboard } from './studio-dashboard.js';
