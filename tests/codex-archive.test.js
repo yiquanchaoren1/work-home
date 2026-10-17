@@ -27,6 +27,17 @@ test('collects one prepared summary per date and never reads conversation logs o
   await assert.rejects(collectDailySummaries({workspaceRoot:f.workspace,since:'2026-02-30'}),/日期无效/);
 });
 
+test('automatic disk views include only completed Shanghai dates and preserve the authoritative workspace',async t=>{
+  const f=await fixture(t),workspace=new FileWorkspace(path.join(f.root,'data'),{workspaceRoot:f.workspace});await workspace.init();
+  await fs.writeFile(path.join(f.worklogs,'2026-10-16.md'),'# 昨日\n\n- 可核实结果。\n');
+  await fs.writeFile(path.join(f.worklogs,'2026-10-17.md'),'# 当日\n\n- 当天合并记录。\n');
+  const original=await workspace.getState(),bytes=await fs.readFile(workspace.statePath);
+  const before=await workspace.readWithArchives({now:new Date('2026-10-17T15:59:59Z')});assert.deepEqual(before.data.dailyArchives.map(x=>x.date),['2026-10-16']);
+  const after=await workspace.readWithArchives({now:new Date('2026-10-17T16:00:00Z')});assert.deepEqual(after.data.dailyArchives.map(x=>x.date),['2026-10-16','2026-10-17']);
+  assert.deepEqual(after.data.notes,original.data.notes);assert.equal(after.revision,original.revision);assert.deepEqual(await fs.readFile(workspace.statePath),bytes);
+  await assert.rejects(collectDailySummaries({workspaceRoot:f.workspace,before:'2026-02-30'}),/截止日期无效/);
+});
+
 test('skips transcript-shaped and overlong sources with a visible warning instead of copying or silently truncating them',async t=>{
   const f=await fixture(t);
   await fs.writeFile(path.join(f.worklogs,'2026-10-16.md'),'# 记录\n\n## 对话原文\n\nuser: 完整输入');

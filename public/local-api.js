@@ -4,7 +4,7 @@ export { cloudMode };
 async function request(url, options = {}) {
   if (cloudMode) {
     const workspace=await githubSession(),value=options.body&&typeof options.body==='string'?JSON.parse(options.body):{};
-    if(url==='/api/state')return options.method==='PUT'?workspace.save(value.data,value.revision):workspace.state();
+    if(url==='/api/state')return options.method==='PUT'?workspace.save(value.data,value.revision):workspace.readWithArchives();
     if(url==='/api/personal-document')return workspace.personalDocument();
     if(url==='/api/codex/sync')return workspace.sync(value.revision,value.since);
     if(url==='/api/backup')return workspace.backup();

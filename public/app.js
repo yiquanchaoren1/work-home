@@ -1,9 +1,9 @@
 import { STORAGE_KEY, createId, normalizeUrl, parseLinks, validateBackup } from './store.js';
 import { seedData } from './seed.js';
 import { renderMarkdown, markdownExcerpt, documentTitle, embedLocalImages } from './markdown.js';
-import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,syncCodexRecords,cloudMode } from './local-api.js';
+import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode } from './local-api.js';
 import { createPersonalUI } from './personal-ui.js';
-import { personalData } from './personal.js';
+import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
 import { applyTheme,refreshVisuals,installSpotlight } from './ui-effects.js';
 import { installAppPanel } from './install-app.js';
@@ -28,7 +28,7 @@ const paths = {
   note:'M6 3h9l5 5v13H4V3z M14 3v6h6 M8 13h8 M8 17h6', heart:'M12 21L3 12C-2 3 8-1 12 6c4-7 14-3 9 6z',
 };
 const icon = (name, cls = '') => `<svg class="${cls}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.note}"/></svg>`;
-const labels = {dashboard:'工作台',tasks:'工作事项',links:'链接库',notes:'知识库',records:'环境与验证',activity:'工作记录',settings:'数据与设置',detail:'事项详情',profile:'工作档案',journal:'工作档案',portable:'工作档案',archives:'工作档案'};
+const labels = {dashboard:'工作台',tasks:'工作事项',links:'链接库',notes:'知识库',activity:'工作记录',settings:'数据与设置',detail:'事项详情',profile:'工作档案',journal:'工作档案',portable:'工作档案',archives:'工作档案'};
 const kinds = {tasks:'事项',links:'链接',notes:'文档',records:'验证记录'};
 const statuses = ['待开始','进行中','等待反馈','已完成','暂缓','资料归档'];
 const categories = ['未分类','代码评审','任务需求','技术文档','环境工具','测试结果','参考资料'];
@@ -39,8 +39,9 @@ let data = {...structuredClone(seedData), tasks:[],links:[],notes:[],records:[],
 let noteDirty = false, previewTimer, documentDrafts = [], documentSelectedFiles = [], documentImageFiles = [], documentImportGeneration = 0;
 let lastView='',commandIndex=-1;
 let masterPath='',codexDir='',codexWorkspace='',documentUploadReturn='notes';
-const personalUI=createPersonalUI({data:()=>data,masterPath:()=>masterPath,codexDir:()=>codexDir,codexWorkspace:()=>codexWorkspace,esc,field,selectField,showModal,commit,toast,download,render,dirty:value=>{noteDirty=value;},discard:canDiscardDocument,upload:startDocumentUpload,sync:async since=>{const result=await withBusy(()=>syncCodexRecords(revision,since));acceptState(result);render();return result;}});
-let route = () => { const parts = location.hash.slice(1).split('/'); return {page:parts[0] || 'dashboard', id:decodeURIComponent(parts.slice(1).join('/'))}; };
+let archiveStatus={},reloading=false;
+const personalUI=createPersonalUI({data:()=>data,archiveStatus:()=>archiveStatus,masterPath:()=>masterPath,codexDir:()=>codexDir,codexWorkspace:()=>codexWorkspace,esc,field,selectField,showModal,commit,toast,download,render,dirty:value=>{noteDirty=value;},discard:canDiscardDocument,upload:startDocumentUpload});
+let route = () => { const parts = location.hash.slice(1).split('/'); return {page:parts[0]==='records'?'dashboard':parts[0] || 'dashboard', id:decodeURIComponent(parts.slice(1).join('/'))}; };
 const date = (s) => new Intl.DateTimeFormat('zh-CN', {timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit'}).format(new Date(s));
 const fullDate = (s) => new Intl.DateTimeFormat('zh-CN', {timeZone:'Asia/Shanghai',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(s));
 const sorted = (xs) => [...xs].sort((a,b) => Number(b.pinned)-Number(a.pinned) || b.updatedAt.localeCompare(a.updatedAt));
@@ -64,6 +65,7 @@ function acceptState(state) {
   if(!state.features.includes('ui-refresh-v1'))throw new Error('请重新启动本机工作间服务以加载新版界面。');
   codexDir=state.codexDir||codexDir;codexWorkspace=state.codexWorkspace||codexWorkspace;
   masterPath=state.masterPath||masterPath;
+  archiveStatus=state.archiveSync || archiveStatus;
   data = validateBackup(state.data); revision = state.revision; dataDir = state.dataDir || dataDir; diskWarning=state.warning||''; loadError = '';
   applyTheme(data.settings.theme);
 }
@@ -88,9 +90,10 @@ async function initialize() {
   initializing=false; render(); openEditRoute();
 }
 async function reloadWorkspace(silent = false) {
-  if (busy || initializing || modal.open) return;
+  if (busy || initializing || reloading || modal.open) return;
   if (silent && document.activeElement?.matches('input,textarea,select')) return;
   const previousRevision=revision;
+  reloading=true;
   try {
     const current = await readWorkspace();
     if (modal.open || busy || initializing || previousRevision!==revision) return;
@@ -98,6 +101,7 @@ async function reloadWorkspace(silent = false) {
     acceptState(current); render();
     if (!silent) toast(changed ? '已载入本机最新数据' : '当前已是最新数据');
   } catch (error) { if (!silent) { loadError=error.message; render(); } }
+  finally {reloading=false;}
 }
 async function withBusy(operation) {
   if (busy) throw new Error('正在保存到本机，请稍候。');
@@ -121,7 +125,7 @@ const addButton = (collection,label) => `<button class="button primary" data-act
 const importButton = () => `<button class="button secondary" data-action="import">${icon('upload')}导入链接</button>`;
 function menu() {
   const p = route().page === 'detail' ? 'tasks' : ['profile','journal','portable'].includes(route().page)?'archives':route().page;
-  $('#navigation').innerHTML = [['dashboard','grid'],['tasks','task'],['links','link'],['notes','book'],['records','flask'],['activity','clock'],['archives','folder']].map(([key,ico])=>`<a href="#${key}" class="nav-item ${p===key?'active':''}" title="${labels[key]}" aria-label="${labels[key]}" ${p===key?'aria-current="page"':''}>${icon(ico)}<span>${labels[key]}</span>${data[key]?`<span class="nav-count">${data[key].length}</span>`:''}</a>`).join('');
+  $('#navigation').innerHTML = [['dashboard','grid'],['tasks','task'],['links','link'],['notes','book'],['activity','clock'],['archives','folder']].map(([key,ico])=>`<a href="#${key}" class="nav-item ${p===key?'active':''}" title="${labels[key]}" aria-label="${labels[key]}" ${p===key?'aria-current="page"':''}>${icon(ico)}<span>${labels[key]}</span>${data[key]?`<span class="nav-count">${data[key].length}</span>`:''}</a>`).join('');
   $('#breadcrumb-title').textContent = labels[route().page] || '工作台';
   $('#workspace-name').textContent = data.settings.name;
 }
@@ -135,7 +139,6 @@ function linkCard(l) {
 }
 function documentUrl(id) { return `./document.html?id=${encodeURIComponent(id)}`; }
 function noteCard(n) { return `<a class="note-card" href="${documentUrl(n.id)}" target="_blank" rel="noopener noreferrer" aria-label="打开文档：${esc(n.title)}（新标签页）"><div class="card-top"><span class="topic-icon">${icon(n.category==='公共组件'?'code':'book')}</span><span class="badge gray">${esc(n.category)}</span></div><h3>${esc(n.title)}</h3><p class="card-description">${esc(n.attachment?(n.body || n.attachment.name):n.format==='markdown'?markdownExcerpt(n.body):n.body.slice(0,105))}</p><div class="card-footer">${tags(n.tags.slice(0,2))}<span class="muted">${n.attachment?esc(n.attachment.name.split('.').pop().toUpperCase())+' · ':n.format==='markdown'?'MD · ':''}${date(n.updatedAt)}</span>${icon('external')}</div></a>`; }
-function recordCard(r) { return `<button class="record-card" data-action="view" data-collection="records" data-id="${esc(r.id)}"><span class="stat-icon">${icon('flask')}</span><div class="record-content"><h3>${esc(r.title)}</h3><p>${esc([r.environment,r.version].filter(Boolean).join(' · ') || '环境与版本待补充')}</p>${r.taskId?`<span class="muted">${esc(taskName(r.taskId))}</span>`:''}</div><div class="record-meta">${badge(r.kind)}${badge(r.result)}<time>${date(r.updatedAt)}</time></div></button>`; }
 function activities(limit=30) { return data.activity.length?`<div class="activity-list">${data.activity.slice(0,limit).map(a=>`<div class="activity-item"><span class="activity-dot"></span><div class="activity-content"><p>${esc(a.text)}</p><time>${date(a.at)} · ${new Date(a.at).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit'})}</time></div></div>`).join('')}</div>`:empty('每一步，都会留下记录','添加事项、收集链接后，你的工作足迹会出现在这里。'); }
 function workspaceVisual() {
   return `<div class="workspace-orbit" aria-hidden="true"><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><div class="orbit-path"></div><div class="orbit-core"><span class="core-glyph">间</span><span>WORKSPACE</span></div><div class="orbit-node node-tasks">${icon('task')}<span>工作事项<strong>${data.tasks.length}</strong></span></div><div class="orbit-node node-notes">${icon('book')}<span>知识文档<strong>${data.notes.length}</strong></span></div><div class="orbit-node node-links">${icon('link')}<span>常用链接<strong>${data.links.length}</strong></span></div><div class="orbit-caption"><span class="status-dot"></span>灵感、行动与知识，在这里连接</div></div>`;
@@ -145,7 +148,7 @@ function dashboard() {
   const shortcuts = sorted(data.links).slice(0,6);
   return pageHeader(fullDate(new Date()),'今天，从这里开始。','把正在做的事和需要的资料，放在触手可及的地方。',`<button class="button secondary" data-action="journal-new">${icon('note')}记录今天</button>`+importButton()+addButton('tasks','新建事项'))+
     `<section class="hero"><div class="hero-copy"><span class="hero-tag"><span class="status-dot"></span>你的个人研发空间</span><h2>把思路连起来，<br><em>让工作向前一步。</em></h2><p>事项、资料与每一天的积累，<br>在一个安静、有序的空间里继续。</p><div class="hero-actions"><button class="button primary" data-action="${active.length?'continue':'import'}">${active.length?'继续当前工作':'导入我的工作链接'}${icon('arrow')}</button><a class="text-button" href="#archives">查看工作档案 ${icon('arrow')}</a></div><div class="hero-footnote"><span>LOCAL FIRST</span><i></i>数据保存在本机</div></div><div class="hero-visual">${workspaceVisual()}</div></section>`+
-    `<div class="stats-grid">${[['task',active.length,'待推进事项','tasks'],['link',data.links.length,'收集的链接','links'],['book',data.notes.length,'知识笔记','notes'],['flask',data.records.length,'验证与环境记录','records']].map(([ico,n,label,target])=>`<a class="stat-card" href="#${target}"><span class="stat-icon">${icon(ico)}</span><div><span class="stat-number">${n}</span><span class="stat-label">${label}</span></div>${icon('arrow','stat-arrow')}</a>`).join('')}</div>`+
+    `<div class="stats-grid">${[['task',active.length,'待推进事项','tasks'],['link',data.links.length,'收集的链接','links'],['book',data.notes.length,'知识笔记','notes'],['clock',(data.dailyArchives||[]).filter(item=>item.date<dayKey()).length,'每日工作摘要','archives']].map(([ico,n,label,target])=>`<a class="stat-card" href="#${target}"><span class="stat-icon">${icon(ico)}</span><div><span class="stat-number">${n}</span><span class="stat-label">${label}</span></div>${icon('arrow','stat-arrow')}</a>`).join('')}</div>`+
     `<div class="dashboard-grid"><div class="stack"><section class="panel"><div class="section-head"><h2>当前关注 <span class="section-count">${active.length}</span></h2><a href="#tasks" class="text-button">全部事项 ${icon('arrow')}</a></div>${active.length?`<div class="task-list">${active.slice(0,3).map(taskCard).join('')}</div>`:empty('下一件值得推进的事是什么？','记下目标和下一步，下次回来就能继续。','new-task','创建第一个工作事项')}</section><section class="panel"><div class="section-head"><h2>常用入口</h2><a href="#links" class="text-button">链接库 ${icon('arrow')}</a></div><div class="quick-grid">${shortcuts.length?shortcuts.map(l=>`<a class="quick-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" data-track="${esc(l.id)}"><span class="link-icon">${icon('link')}</span><span><strong class="link-name">${esc(l.title)}</strong><small class="link-domain">${esc(new URL(l.url).hostname)}</small></span>${icon('external')}</a>`).join(''):[['代码评审','Gerrit / Pull request','代码评审'],['任务需求','Jira / 工作需求','任务需求'],['团队文档','钉钉 / 技术资料','技术文档'],['开发环境','环境说明 / 常用工具','环境工具']].map(([name,desc,cat])=>`<button class="quick-link" data-action="add-entry" data-category="${cat}" data-title="${name}"><span class="link-icon">${icon('plus')}</span><span><strong class="link-name">添加${name}</strong><small class="link-domain">${desc}</small></span></button>`).join('')}</div></section></div><div class="stack"><section class="panel"><div class="section-head"><h2>最近记录</h2><a class="text-button" href="#activity">查看全部</a></div>${activities(5)}</section><aside class="quote-card"><span class="eyebrow">一个小习惯</span><p>结束工作前，<br>给明天留一句「下一步」。</p><span class="muted">不用重新想起，就能继续向前。</span></aside></div></div>`+
     `<section class="panel knowledge-panel"><div class="section-head"><div><h2>你的知识积累</h2><p class="section-subtitle">从源码到验证，把经验留在这里。</p></div><a class="text-button" href="#notes">打开知识库 ${icon('arrow')}</a></div><div class="topic-grid">${sorted(data.notes).slice(0,3).map(noteCard).join('')}</div></section>`;
 }
@@ -155,18 +158,17 @@ function listPage(page) {
   if(page==='tasks') return pageHeader('MAKE PROGRESS','工作事项','拖动卡片左上角的手柄调整顺序；也可以用方向键排序。顺序会保存到本机。',addButton('tasks','新建事项'))+toolbar(['进行中','待开始','等待反馈','已完成','暂缓','资料归档'],'查找事项')+`<div class="card-grid" id="sortable-tasks">${filtered(data.tasks,'status').map(t=>taskCard(t,true)).join('') || empty('这里还没有事项','试试其他筛选，或新建一件工作。','new-task','新建事项')}</div>`;
   if(page==='links') return pageHeader('EVERYTHING CONNECTED','链接库','工作中用到的入口，都有一个好找的位置。',importButton()+addButton('links','添加链接'))+toolbar([...new Set(data.links.map(l=>l.category))],'搜索标题、用途、标签')+`<div class="card-grid">${filtered(data.links,'category').map(linkCard).join('') || empty('收下你的第一个工作链接','支持批量粘贴、浏览器书签和 CSV 文件导入。','import','导入链接')}</div>`;
   if(page==='notes') return pageHeader('BUILD YOUR KNOWLEDGE','知识库','文档保存在本机文件夹，点击卡片在新标签页阅读。',`<button class="button secondary" data-action="upload-documents">${icon('upload')}上传文档</button>`+addButton('notes','新建文档'))+toolbar([...new Set(data.notes.map(n=>n.category))],'搜索文档、标签')+`<div class="note-grid">${filtered(data.notes,'category').map(noteCard).join('') || empty('还没有相关文档','上传 Markdown、PDF、文本或图片，或直接开始写作。','new-note','新建文档')}</div>`;
-  if(page==='records') return pageHeader('EVIDENCE MATTERS','环境与验证','让每个结论，都能找到当时的环境和依据。',addButton('records','添加记录'))+`<div class="callout">${icon('flask')}<p>分别记录源码核对、构建、QEMU 功能与 EMU / 真机性能；每次结果都关联对应的代码和环境。</p></div>`+toolbar([...new Set(data.records.map(r=>r.kind))],'搜索记录')+`<div class="record-list">${filtered(data.records,'kind').map(recordCard).join('') || empty('从一次验证开始','记录结果、版本、环境和日志位置，下次排查会更容易。','new-record','添加验证记录')}</div>`;
 }
 function detail(id) {
   const t = data.tasks.find(x=>x.id===id);
   if(!t) return pageHeader('WORK ITEM','事项不存在','它可能已被删除。')+'<a class="button secondary" href="#tasks">返回事项列表</a>';
-  const related = Object.fromEntries(['links','notes','records'].map(k=>[k,k==='links'?linksForTask(data,id):data[k].filter(x=>x.taskId===id)]));
+  const related = Object.fromEntries(['links','notes'].map(k=>[k,k==='links'?linksForTask(data,id):data[k].filter(x=>x.taskId===id)]));
   return pageHeader(esc(t.type),esc(t.title),`更新于 ${date(t.updatedAt)} · ${esc(t.status)}`,`<a class="button secondary" href="#tasks">返回列表</a><button class="button secondary" data-action="task-links" data-id="${esc(id)}">${icon('link')}关联已有链接</button><button class="button primary" data-action="edit" data-collection="tasks" data-id="${esc(id)}">${icon('edit')}编辑事项</button>`)+
-    `<div class="detail-layout"><div class="stack"><section class="panel detail-section"><h2>目标与当前结论</h2><div class="prose">${esc(t.summary || '还没有填写。')}</div>${tags(t.tags)}</section><section class="panel detail-section"><div class="section-head"><h2>相关链接 <span class="section-count">${related.links.length}</span></h2><button class="text-button" data-action="new" data-collection="links" data-task-id="${esc(id)}">${icon('plus')}添加链接</button></div>${related.links.length?`<div class="card-grid">${related.links.map(linkCard).join('')}</div>`:empty('把资料关联到这件事','需求、评审与参考资料，可以放在一起。')}</section><section class="panel detail-section"><div class="section-head"><h2>笔记与交付</h2><button class="text-button" data-action="new" data-collection="notes" data-task-id="${esc(id)}">${icon('plus')}添加笔记</button></div><div class="note-grid">${related.notes.map(noteCard).join('') || '<p class="muted">还没有相关笔记。</p>'}</div></section><section class="panel detail-section"><div class="section-head"><h2>验证记录</h2><button class="text-button" data-action="new" data-collection="records" data-task-id="${esc(id)}">${icon('plus')}添加记录</button></div>${related.records.map(recordCard).join('') || '<p class="muted">还没有相关记录。</p>'}</section></div><div class="stack"><section class="panel detail-section"><h2>下一步</h2><div class="prose">${esc(t.nextStep || '写下一件可以继续执行的小事。')}</div><label class="field">工作状态<select id="detail-status" data-id="${esc(id)}">${opts([...new Set([...statuses,t.status])],t.status)}</select></label></section><section class="panel detail-section"><h2>事项管理</h2><p class="muted">删除事项会解除资料关联，链接、笔记和验证记录仍然保留。</p><button class="button danger small" data-action="delete" data-collection="tasks" data-id="${esc(id)}">${icon('trash')}删除事项</button></section></div></div>`;
+    `<div class="detail-layout"><div class="stack"><section class="panel detail-section"><h2>目标与当前结论</h2><div class="prose">${esc(t.summary || '还没有填写。')}</div>${tags(t.tags)}</section><section class="panel detail-section"><div class="section-head"><h2>相关链接 <span class="section-count">${related.links.length}</span></h2><button class="text-button" data-action="new" data-collection="links" data-task-id="${esc(id)}">${icon('plus')}添加链接</button></div>${related.links.length?`<div class="card-grid">${related.links.map(linkCard).join('')}</div>`:empty('把资料关联到这件事','需求、评审与参考资料，可以放在一起。')}</section><section class="panel detail-section"><div class="section-head"><h2>笔记与交付</h2><button class="text-button" data-action="new" data-collection="notes" data-task-id="${esc(id)}">${icon('plus')}添加笔记</button></div><div class="note-grid">${related.notes.map(noteCard).join('') || '<p class="muted">还没有相关笔记。</p>'}</div></section></div><div class="stack"><section class="panel detail-section"><h2>下一步</h2><div class="prose">${esc(t.nextStep || '写下一件可以继续执行的小事。')}</div><label class="field">工作状态<select id="detail-status" data-id="${esc(id)}">${opts([...new Set([...statuses,t.status])],t.status)}</select></label></section><section class="panel detail-section"><h2>事项管理</h2><p class="muted">删除事项会解除资料关联，已有链接和文档仍然保留。</p><button class="button danger small" data-action="delete" data-collection="tasks" data-id="${esc(id)}">${icon('trash')}删除事项</button></section></div></div>`;
 }
 function settings() {
   return pageHeader('YOUR SPACE, YOUR DATA','数据与设置','所有资料保存在本机文件夹。换浏览器、清除网站数据不会删除已保存的资料。',`<button class="button secondary" data-action="reload-data">${icon('folder')}重新载入</button>`)+installAppPanel()+cloudConnectionPanel()+
-    `<div class="settings-grid"><section class="panel backup-panel"><h2>工作台名称</h2><form id="settings-form"><label class="field">空间名称<input name="name" required maxlength="50" value="${esc(data.settings.name)}"></label><button class="button primary" type="submit">保存名称</button></form></section><section class="panel backup-panel"><h2>导出备份</h2><p>包含全部事项、链接、文档原文件、验证记录和设置。下载的 JSON 文件可在这里恢复。</p><button class="button primary" data-action="export">${icon('download')}下载完整备份</button><p class="hint">${data.tasks.length} 个事项 · ${data.links.length} 个链接 · ${data.notes.length} 篇文档 · ${data.records.length} 条验证</p></section><section class="panel backup-panel"><h2>恢复或合并数据</h2><p>选择工作间导出的 JSON 文件，预览后决定合并或替换。合并保留现有内容；替换前会自动保存本机恢复副本。</p><label class="field">备份文件<input id="backup-file" type="file" accept=".json,application/json"></label><div id="restore-preview"></div></section><section class="panel backup-panel"><h2>本机数据位置</h2><div class="prose">${esc(dataDir || '等待本机服务连接……')}
+    `<div class="settings-grid"><section class="panel backup-panel"><h2>工作台名称</h2><form id="settings-form"><label class="field">空间名称<input name="name" required maxlength="50" value="${esc(data.settings.name)}"></label><button class="button primary" type="submit">保存名称</button></form></section><section class="panel backup-panel"><h2>导出备份</h2><p>包含全部事项、链接、文档原文件、工作档案和设置。下载的 JSON 文件可在这里恢复。</p><button class="button primary" data-action="export">${icon('download')}下载完整备份</button><p class="hint">${data.tasks.length} 个事项 · ${data.links.length} 个链接 · ${data.notes.length} 篇文档</p></section><section class="panel backup-panel"><h2>恢复或合并数据</h2><p>选择工作间导出的 JSON 文件，预览后决定合并或替换。合并保留现有内容；替换前会自动保存本机恢复副本。</p><label class="field">备份文件<input id="backup-file" type="file" accept=".json,application/json"></label><div id="restore-preview"></div></section><section class="panel backup-panel"><h2>本机数据位置</h2><div class="prose">${esc(dataDir || '等待本机服务连接……')}
 
 工作内容、文档和图片写入此文件夹，不写入浏览器存储。请保留此文件夹；完整备份也包含上传的原文件。
 
@@ -176,7 +178,7 @@ function settings() {
 }
 function render() {
   menu(); const {page,id} = route();
-  const body = page==='dashboard'?dashboard():['archives','profile','journal','portable'].includes(page)?personalUI.page(page,id):['tasks','links','notes','records'].includes(page)?listPage(page):page==='detail'?detail(id):page==='activity'?pageHeader('ONE STEP AT A TIME','工作记录','每一次收集、思考和推进，都值得留下。')+`<section class="panel">${activities(300)}</section>`:page==='settings'?settings():dashboard();
+  const body = page==='dashboard'?dashboard():['archives','profile','journal','portable'].includes(page)?personalUI.page(page,id):['tasks','links','notes'].includes(page)?listPage(page):page==='detail'?detail(id):page==='activity'?pageHeader('ONE STEP AT A TIME','工作记录','每一次收集、思考和推进，都值得留下。')+`<section class="panel">${activities(300)}</section>`:page==='settings'?settings():dashboard();
   $('.storage-state span:nth-child(2)').textContent=loadError?'本机服务未连接':'数据保存在本机文件夹';
   $('#content').innerHTML = (loadError?`<div class="callout error"><div><strong>本机数据暂时无法读取</strong><p>${esc(loadError)}</p><button class="button secondary small" data-action="retry-connect">重新连接</button></div></div>`:'')+(migrationWarning?`<div class="callout error"><div><strong>旧数据迁移提示</strong><p>${esc(migrationWarning)}</p><button class="button secondary small" data-action="raw-export">下载旧浏览器数据</button><button class="button secondary small" data-action="retry-connect">重试迁移</button></div></div>`:'')+body;
   if(diskWarning)$('#content').insertAdjacentHTML('afterbegin',`<div class="callout error"><div><strong>本机文件提示</strong><p>${esc(diskWarning)}</p></div></div>`);
@@ -328,7 +330,7 @@ async function restoreBackup(mode) {
 }
 function askDelete(collection,id) {
   const item=data[collection].find(x=>x.id===id);if(!item)return;
-  showModal(`删除${kinds[collection]}`,`<p>确定删除「${esc(item.title)}」？</p><p class="muted">${collection==='tasks'?'关联的链接、笔记和验证记录会保留，只解除关联。':'此操作无法撤销，重要内容可以先导出备份。'}</p>`,`<button class="button secondary" data-action="close">取消</button><button class="button danger" data-action="confirm-delete" data-collection="${collection}" data-id="${esc(id)}">确定删除</button>`);
+  showModal(`删除${kinds[collection]}`,`<p>确定删除「${esc(item.title)}」？</p><p class="muted">${collection==='tasks'?'关联资料会保留，只解除关联。':'此操作无法撤销，重要内容可以先导出备份。'}</p>`,`<button class="button secondary" data-action="close">取消</button><button class="button danger" data-action="confirm-delete" data-collection="${collection}" data-id="${esc(id)}">确定删除</button>`);
 }
 function quickCommands() {
   return `<section class="search-group"><h3>快速开始</h3>${[['new','tasks','新建工作事项','记录目标与下一步','plus'],['new','notes','新建文档','把新的思路留在本机','note'],['navigate','archives','打开工作档案','每日摘要、历史总结与个人档案','folder'],['navigate','tasks','查看工作事项','继续推进，或调整顺序与状态','task'],['navigate','settings','打开数据与设置','主题、完整备份与恢复','settings']].map(([action,target,title,desc,ico])=>`<button class="search-result" data-action="${action}" ${action==='new'?`data-collection="${target}"`:`data-page="${target}"`}>${icon(ico)}<span><strong>${title}</strong><small>${desc}</small></span>${icon('arrow')}</button>`).join('')}</section>`;
@@ -346,7 +348,7 @@ function searchModal() {
 function searchAll(value) {
   const q=value.trim().toLowerCase(); let total=0;
   if(!q){$('#search-results').innerHTML=quickCommands();return;}
-  $('#search-results').innerHTML=!q?'<p class="muted">输入关键词开始搜索。</p>':['tasks','links','notes','records'].map(k=>{const found=data[k].filter(x=>[x.title,x.url,x.summary,x.nextStep,x.description,x.body,x.environment,x.command,x.log,...(x.tags||[])].join(' ').toLowerCase().includes(q));total+=found.length;return found.length?`<section class="search-group"><h3>${labels[k]} · ${found.length}</h3>${found.slice(0,25).map(x=>`<button class="search-result" data-action="search-open" data-collection="${k}" data-id="${esc(x.id)}">${icon(k==='links'?'link':k==='tasks'?'task':'note')}<span><strong>${esc(x.title)}</strong><small>${esc((x.description||x.summary||x.body||x.environment||x.url||'').slice(0,90))}</small></span>${icon('arrow')}</button>`).join('')}</section>`:'';}).join('') || empty('没有找到相关内容','试试其他关键词。');
+  $('#search-results').innerHTML=!q?'<p class="muted">输入关键词开始搜索。</p>':['tasks','links','notes'].map(k=>{const found=data[k].filter(x=>[x.title,x.url,x.summary,x.nextStep,x.description,x.body,...(x.tags||[])].join(' ').toLowerCase().includes(q));total+=found.length;return found.length?`<section class="search-group"><h3>${labels[k]} · ${found.length}</h3>${found.slice(0,25).map(x=>`<button class="search-result" data-action="search-open" data-collection="${k}" data-id="${esc(x.id)}">${icon(k==='links'?'link':k==='tasks'?'task':'note')}<span><strong>${esc(x.title)}</strong><small>${esc((x.description||x.summary||x.body||x.url||'').slice(0,90))}</small></span>${icon('arrow')}</button>`).join('')}</section>`:'';}).join('') || empty('没有找到相关内容','试试其他关键词。');
 }
 function appendPersonalSearch(value) {
   const q=value.trim().toLowerCase();if(!q)return;
@@ -356,7 +358,7 @@ function appendPersonalSearch(value) {
     $('#search-results .empty-state')?.remove();
     $('#search-results').insertAdjacentHTML('beforeend',`<section class="search-group"><h3>${label} · ${found.length}</h3>${found.slice(0,25).map(item=>`<button class="search-result" data-action="${action}" data-id="${esc(item.id)}">${icon('note')}<span><strong>${esc(item.title)}</strong><small>${esc((item.body||item.work||item.learning||'').slice(0,90))}</small></span></button>`).join('')}</section>`);
   }
-  const summaries=(data.dailyArchives||[]).filter(item=>[item.title,item.body].join(' ').toLowerCase().includes(q));
+  const summaries=(data.dailyArchives||[]).filter(item=>item.date<dayKey()&&[item.title,item.body].join(' ').toLowerCase().includes(q));
   if(summaries.length){$('#search-results .empty-state')?.remove();$('#search-results').insertAdjacentHTML('beforeend',`<section class="search-group"><h3>每日摘要 · ${summaries.length}</h3>${summaries.slice(0,25).map(item=>`<a class="search-result" href="./daily-archive.html?date=${encodeURIComponent(item.date)}" target="_blank" rel="noopener noreferrer">${icon('note')}<span><strong>${esc(item.title)}</strong><small>${esc(item.body.slice(0,90))}</small></span></a>`).join('')}</section>`);}
   const documents=(data.archiveDocuments||[]).filter(item=>[item.title,item.body].join(' ').toLowerCase().includes(q));
   if(documents.length){$('#search-results .empty-state')?.remove();$('#search-results').insertAdjacentHTML('beforeend',`<section class="search-group"><h3>档案文档 · ${documents.length}</h3>${documents.map(item=>`<a class="search-result" href="./daily-archive.html?archive=${encodeURIComponent(item.id)}" target="_blank" rel="noopener noreferrer">${icon('note')}<span><strong>${esc(item.title)}</strong><small>${esc(item.body.slice(0,90))}</small></span></a>`).join('')}</section>`);}
@@ -411,7 +413,6 @@ document.addEventListener('click',async event=>{
     if(action==='new-task')editForm('tasks');
     if(action==='task-links'){if(canDiscardDocument())chooseTaskLinks(id);}
     if(action==='new-note')editForm('notes');
-    if(action==='new-record')editForm('records');
     if(action==='edit')editForm(collection,id);
     if(action==='view')viewItem(collection,id);
     if(action==='upload-documents')startDocumentUpload();
@@ -516,7 +517,7 @@ document.addEventListener('change',async event=>{
       } catch(error) { if(control.isConnected)control.value=previous||'';throw error; }
     }
     if(event.target.id==='import-file'){const file=event.target.files[0];if(!file)return;if(file.size>5*1024*1024)throw new Error('文件超过 5 MB，请分批导入');importFileFormat=/\.csv$/i.test(file.name)?'csv':/\.html?$/i.test(file.name)?'html':'text';$('#import-text').value=await file.text();previewImport();}
-    if(event.target.id==='backup-file'){restoreCandidate=null;const file=event.target.files[0];if(!file)return;if(file.size>256*1024*1024)throw new Error('备份文件超过 256 MB，请改为复制本机数据文件夹');const parsed=JSON.parse(await file.text());restoreCandidate={...validateBackup(parsed),files:parsed.files||[]};if(!Array.isArray(restoreCandidate.files))throw new Error('备份 files 必须为数组');$('#restore-preview').innerHTML=`<div class="callout"><p>${restoreCandidate.tasks.length} 个事项 · ${restoreCandidate.links.length} 个链接 · ${restoreCandidate.notes.length} 篇文档 · ${restoreCandidate.records.length} 条验证 · ${restoreCandidate.files.length} 个原文件</p></div><div class="header-actions"><button class="button primary" data-action="merge-backup" ${loadError?'disabled':''}>合并，保留现有内容</button><button class="button secondary" data-action="replace-backup">用备份替换</button></div>`;}
+    if(event.target.id==='backup-file'){restoreCandidate=null;const file=event.target.files[0];if(!file)return;if(file.size>256*1024*1024)throw new Error('备份文件超过 256 MB，请改为复制本机数据文件夹');const parsed=JSON.parse(await file.text());restoreCandidate={...validateBackup(parsed),files:parsed.files||[]};if(!Array.isArray(restoreCandidate.files))throw new Error('备份 files 必须为数组');$('#restore-preview').innerHTML=`<div class="callout"><p>${restoreCandidate.tasks.length} 个事项 · ${restoreCandidate.links.length} 个链接 · ${restoreCandidate.notes.length} 篇文档 · ${restoreCandidate.files.length} 个原文件</p></div><div class="header-actions"><button class="button primary" data-action="merge-backup" ${loadError?'disabled':''}>合并，保留现有内容</button><button class="button secondary" data-action="replace-backup">用备份替换</button></div>`;}
   }catch(e){if(event.target.id==='backup-file'){$('#restore-preview').textContent='备份无效：'+e.message;restoreCandidate=null;}else formError(e);}
 });
 document.addEventListener('keydown',event=>{
@@ -546,8 +547,10 @@ function openEditRoute() {
   history.replaceState(null,'','#notes');
 }
 window.addEventListener('beforeunload',event=>{if(noteDirty||busy){event.preventDefault();event.returnValue='';}});
-window.addEventListener('hashchange',()=>{filter='';query='';document.body.classList.remove('menu-open');render();openEditRoute();window.scrollTo(0,0);});
+window.addEventListener('hashchange',()=>{filter='';query='';document.body.classList.remove('menu-open');render();openEditRoute();window.scrollTo(0,0);if(['archives','profile','journal','portable'].includes(route().page))void reloadWorkspace(true);});
 window.addEventListener('focus',()=>{if(!modal.open)void reloadWorkspace(true);});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void reloadWorkspace(true);});
+setInterval(()=>{if(document.visibilityState==='visible')void reloadWorkspace(true);},60000);
 $('#content').textContent='正在读取本机工作台……';
 installSpotlight();
 await initialize();

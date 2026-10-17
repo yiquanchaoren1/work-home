@@ -1,0 +1,7 @@
+.archive-auto-panel { display:flex; justify-content:space-between; align-items:center; gap:26px; margin:22px 0; padding:26px; border:1px solid var(--border); background:linear-gradient(110deg,var(--surface),var(--surface-soft)); }
+.archive-auto-panel h2 { margin:7px 0 10px; font-size:22px; letter-spacing:-.4px; }
+.archive-auto-panel .hint { line-height:1.9; max-width:660px; }
+.archive-auto-state { display:flex; flex-direction:column; align-items:flex-end; gap:11px; flex-shrink:0; }
+.archive-auto-state strong { font-size:29px; color:var(--ink); font-weight:700; }
+.archive-auto-state small { font-size:11px; color:var(--muted); font-weight:500; }
+@media(max-width:600px) { .archive-auto-panel { align-items:flex-start; flex-direction:column; gap:18px; padding:23px; }.archive-auto-panel h2 { font-size:21px; }.archive-auto-state { width:100%;flex-direction:row;align-items:center;flex-wrap:wrap;gap:9px 15px; }.archive-auto-state strong { font-size:22px; }.archive-auto-state>.hint { width:100%; } }

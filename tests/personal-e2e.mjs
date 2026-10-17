@@ -27,7 +27,7 @@ try {
     let text='%PDF-1.4\n';const offsets=[0];for(const [i,obj]of objects.entries()){offsets.push(Buffer.byteLength(text));text+=`${i+1} 0 obj\n${obj}\nendobj\n`;}const start=Buffer.byteLength(text);text+=`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map(n=>String(n).padStart(10,'0')+' 00000 n \n').join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${start}\n%%EOF\n`;return Buffer.from(text);
   };
   await check('existing interface and confirmed profile save persist exact text without executing HTML',async()=>{
-    await go('dashboard');for(const key of ['tasks','links','notes','records','activity'])assert.equal(await page.locator('#navigation a[href="#'+key+'"]').count(),1);
+    await go('dashboard');for(const key of ['tasks','links','notes','activity'])assert.equal(await page.locator('#navigation a[href="#'+key+'"]').count(),1);assert.equal(await page.locator('#navigation a[href="#records"]').count(),0);
     await go('profile');await act('personal-new').click();await field('title').fill('我的回答习惯');await field('kind').selectOption('preference');await field('body').fill('先给结论。\n<script>window.__bad=true</script>');await save();
     const current=await state();confirmedId=current.data.personal.entries[0].id;assert.equal(current.data.personal.entries[0].status,'confirmed');assert.equal(await page.evaluate(()=>window.__bad),undefined);assert.match(await page.locator('.archive-prose').textContent(),/<script>/);
     await page.reload({waitUntil:'networkidle'});assert.equal(await page.locator('[data-entry-id]').count(),1);

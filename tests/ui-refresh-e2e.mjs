@@ -20,7 +20,7 @@ try {
   const go=async route=>{await page.goto(base+'/#'+route,{waitUntil:'networkidle'});await page.locator('#content h1').waitFor();};
   const check=async(name,fn)=>{await fn();passed++;console.log('PASS '+name);};
   await check('sidebar collapse retains all destinations and page state without writing work data',async()=>{
-    const before=await state();await go('dashboard');await page.getByRole('button',{name:'收起侧栏',exact:true}).click();await page.waitForFunction(()=>document.body.classList.contains('sidebar-collapsed'));assert.equal(await page.locator('#navigation a').count(),7);await page.locator('#navigation a[href="#tasks"]').click();await page.getByRole('heading',{name:'工作事项',exact:true}).waitFor();assert.equal(await page.locator('#sortable-tasks [data-task-id]').count(),3);assert.equal(await page.locator('body.sidebar-collapsed').count(),1);await page.getByRole('button',{name:'展开侧栏',exact:true}).click();assert.deepEqual((await state()).data,before.data);
+    const before=await state();await go('dashboard');await page.getByRole('button',{name:'收起侧栏',exact:true}).click();await page.waitForFunction(()=>document.body.classList.contains('sidebar-collapsed'));assert.equal(await page.locator('#navigation a').count(),6);await page.locator('#navigation a[href="#tasks"]').click();await page.getByRole('heading',{name:'工作事项',exact:true}).waitFor();assert.equal(await page.locator('#sortable-tasks [data-task-id]').count(),3);assert.equal(await page.locator('body.sidebar-collapsed').count(),1);await page.getByRole('button',{name:'展开侧栏',exact:true}).click();assert.deepEqual((await state()).data,before.data);
   });
   await check('theme saves on disk, opens in fresh contexts and reader pages; failed writes keep the committed theme',async()=>{
     await page.getByRole('button',{name:'切换到深色主题',exact:true}).click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');assert.equal((await state()).data.settings.theme,'dark');
@@ -35,7 +35,7 @@ try {
   await check('mobile navigation, dark/light layouts and important routes stay within the viewport',async()=>{
     for(const width of [390,768,1024]) {
       await page.setViewportSize({width,height:900});
-      for(const route of ['dashboard','tasks','links','notes','records','archives','settings']){await go(route);await page.waitForFunction(()=>!document.querySelector('body.menu-open'));await page.waitForFunction(()=>document.documentElement.scrollWidth<=innerWidth,{},{timeout:3000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${width} ${route}`);}
+      for(const route of ['dashboard','tasks','links','notes','archives','settings']){await go(route);await page.waitForFunction(()=>!document.querySelector('body.menu-open'));await page.waitForFunction(()=>document.documentElement.scrollWidth<=innerWidth,{},{timeout:3000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${width} ${route}`);}
     }
     await page.setViewportSize({width:390,height:844});await go('dashboard');await page.getByRole('button',{name:'打开导航',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.sidebar').getBoundingClientRect().left>=-1);await page.locator('#navigation a[href="#archives"]').click();await page.getByRole('heading',{name:'工作档案',exact:true}).waitFor();assert.equal(await page.locator('body.menu-open').count(),0);
   });

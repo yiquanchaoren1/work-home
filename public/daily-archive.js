@@ -2,6 +2,7 @@ import {readWorkspace} from './local-api.js';
 import {renderMarkdown} from './markdown.js';
 import {archiveDocumentKinds} from './archive-documents.js';
 import {applyTheme} from './ui-effects.js';
+import {dayKey} from './personal.js';
 
 const reader=document.querySelector('#reader'),button=document.querySelector('#summary-download');
 const date=new URL(location.href).searchParams.get('date');
@@ -10,9 +11,10 @@ let current;
 const element=(tag,className,text)=>{const node=document.createElement(tag);node.className=className;if(text!==undefined)node.textContent=text;return node;};
 async function load() {
   try {
+    if(!archive && date>=dayKey())throw new Error('当天摘要将在次日归档完成后显示。');
     const state=await readWorkspace(),summary=archive?state.data.archiveDocuments?.find(item=>item.id===archive):state.data.dailyArchives?.find(item=>item.date===date);
     applyTheme(state.data.settings.theme);
-    if(!summary)throw new Error('此文档尚未归档，请返回工作档案同步摘要。');
+    if(!summary)throw new Error('此文档尚未归档，上传完成后会自动显示，请稍后重新查看。');
     current=summary;document.title=summary.title+' · 工作间';
     const paper=element('article','reader-paper');
     const filename=archive?archiveDocumentKinds[archive].filename:summary.date+'.md';

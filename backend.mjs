@@ -219,6 +219,15 @@ export class FileWorkspace {
   }
   checkRevision(revision, current) { if (revision !== current.revision) throw new HttpError(409, '本地文件已被其他窗口更新，请重新加载后再保存。', { revision: current.revision }); }
   async getState() { return this.run(async () => this.envelope(await this.syncMaster(await this.load()))); }
+  async readWithArchives({now=new Date()}={}) {
+    const current=await this.getState(),cutoff=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(now),checkedAt=now.toISOString();
+    try {
+      const source=await collectDailySummaries({...this.codexOptions,before:cutoff}),data=clone(current.data);
+      const stats=applyDailySummaries(data,source.documents),archiveDocuments=applyArchiveDocuments(data,source.archiveDocuments);
+      const sourceDir=path.join(this.codexOptions.workspaceRoot,'docs','codex_worklogs');
+      return {...current,data,codexDir:sourceDir,archiveDir:sourceDir,archiveSync:{...stats,archiveDocuments,documents:source.documents.length,warnings:source.warnings,automatic:true,cutoff,checkedAt}};
+    }catch(error){return {...current,archiveSync:{automatic:true,cutoff,checkedAt,warnings:[error.message]}};}
+  }
   async personalDocument() { return this.run(async()=>{const state=await this.syncMaster(await this.load());return {markdown:buildPersonalDocument(state.data),path:this.masterPath,revision:state.revision,...(state.warning?{warning:state.warning}:{})};}); }
   async putState(value) { return this.run(async () => {
     const current = await this.load(); this.checkRevision(value.revision, current);
@@ -277,7 +286,8 @@ export class FileWorkspace {
       }
       return { ...data, files };
   }
-  async exportBackup() {
+  async exportBackup({automaticArchives=false}={}) {
+    if(automaticArchives){const state=await this.readWithArchives();return this.run(()=>this.backupData(state.data));}
     return this.run(async () => this.backupData((await this.load()).data));
   }
   async restore(value) {
@@ -367,7 +377,7 @@ async function serveAttachment(req, res, workspace, id, download) {
   createReadStream(path.join(workspace.filesDir, `${meta.id}.bin`), { start, end }).on('error', () => res.destroy()).pipe(res);
 }
 
-export async function createWorkHubServer({ dataDir, publicDir = path.join(projectDir, 'public'),workspaceRoot } = {}) {
+export async function createWorkHubServer({ dataDir, publicDir = path.join(projectDir, 'public'),workspaceRoot,automaticArchives=false } = {}) {
   const workspace = new FileWorkspace(dataDir,{workspaceRoot}); await workspace.init(); const root = path.resolve(publicDir);
   const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json; charset=utf-8', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.otf': 'font/otf' };
   const server = http.createServer(async (req, res) => {
@@ -383,8 +393,11 @@ export async function createWorkHubServer({ dataDir, publicDir = path.join(proje
       if (pathname.startsWith('/api/')) {
         res.setHeader('Cache-Control', 'no-store');
         if (!['GET', 'HEAD'].includes(req.method) && req.headers.origin !== `http://${host}`) throw new HttpError(403, '写入操作的 Origin 必须匹配当前本地网站');
-        if (pathname === '/api/state' && req.method === 'GET') return json(res, 200, await workspace.getState());
-        if (pathname === '/api/personal-document' && req.method === 'GET') return json(res,200,await workspace.personalDocument());
+        if (pathname === '/api/state' && req.method === 'GET') return json(res, 200, await (automaticArchives?workspace.readWithArchives():workspace.getState()));
+        if (pathname === '/api/personal-document' && req.method === 'GET') {
+          if(automaticArchives){const state=await workspace.readWithArchives();return json(res,200,{markdown:buildPersonalDocument(state.data),path:state.masterPath,revision:state.revision});}
+          return json(res,200,await workspace.personalDocument());
+        }
         if (pathname === '/api/codex/sync' && req.method === 'POST') return json(res,200,await workspace.syncCodex(await readJson(req)));
         if (pathname === '/api/state' && req.method === 'PUT') return json(res, 200, await workspace.putState(await readJson(req)));
         if (pathname === '/api/migrate' && req.method === 'POST') return json(res, 200, await workspace.migrate(await readJson(req)));
@@ -394,7 +407,7 @@ export async function createWorkHubServer({ dataDir, publicDir = path.join(proje
           return json(res, 201, await workspace.upload(await readBody(req, MAX_FILE_BYTES), name));
         }
         if (pathname.startsWith('/api/files/') && ['GET', 'HEAD'].includes(req.method)) return await serveAttachment(req, res, workspace, pathname.slice('/api/files/'.length), url.searchParams.get('download') === '1');
-        if (pathname === '/api/backup' && req.method === 'GET') { res.setHeader('Content-Disposition', disposition(`工作间完整备份-${new Date().toISOString().slice(0, 10)}.json`, false)); return json(res, 200, await workspace.exportBackup()); }
+        if (pathname === '/api/backup' && req.method === 'GET') { res.setHeader('Content-Disposition', disposition(`工作间完整备份-${new Date().toISOString().slice(0, 10)}.json`, false)); return json(res, 200, await workspace.exportBackup({automaticArchives})); }
         if (pathname === '/api/restore' && req.method === 'POST') return json(res, 200, await workspace.restore(await readJson(req, MAX_RESTORE_BYTES)));
         throw new HttpError(404, 'API 不存在或请求方法不支持');
       }

@@ -13,15 +13,16 @@ const msg=(role,text)=>JSON.stringify({timestamp:at,type:'response_item',payload
 await fs.writeFile(file,JSON.stringify({type:'session_meta',payload:{id:'test-session',cwd:workspace,thread_source:'user'}})+'\n'+msg('user','我的当天工作')+msg('assistant','完成源码核对，未运行性能测试'));
 let server,browser,passed=0;
 try {
-  server=await createWorkHubServer({dataDir:path.join(dir,'data'),codexRoots:[sessions],workspaceRoot:workspace});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  server=await createWorkHubServer({dataDir:path.join(dir,'data'),codexRoots:[sessions],workspaceRoot:workspace,automaticArchives:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
   const base='http://127.0.0.1:'+server.address().port,first=await server.workspace.getState(),initial=structuredClone(first.data);
   const [a,b]=initial.tasks;for(const task of initial.tasks)task.status='待开始';
   initial.links=[{id:'shared',title:'共同研发资料',url:'https://example.com/shared',category:'参考资料',description:'',tags:[],pinned:false,taskId:b.id,createdAt:at,updatedAt:at},{id:'other',title:'测试环境入口',url:'https://example.com/env',category:'环境工具',description:'',tags:[],pinned:false,taskId:'',createdAt:at,updatedAt:at}];
   await server.workspace.putState({data:initial,revision:first.revision});
   browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  const go=async hash=>{await page.goto(base+'/#'+hash,{waitUntil:'networkidle'});await page.locator('#content h1').waitFor();};
+  const go=async hash=>{const target=base+'/#'+hash;if(page.url()===target)await page.reload({waitUntil:'networkidle'});else await page.goto(target,{waitUntil:'networkidle'});await page.locator('#content h1').waitFor();};
   const act=name=>page.locator('[data-action="'+name+'"]');
   const state=()=>server.workspace.getState();
+  const view=async()=>(await fetch(base+'/api/state')).json();
   const save=async()=>{await page.locator('#modal button[type=submit]').click();await page.locator('#modal').waitFor({state:'hidden'});};
   const check=async(name,fn)=>{await fn();passed++;console.log('PASS '+name);};
   await check('status shortcut saves without changing order; filtered cards update and failed save reverts',async()=>{
@@ -37,19 +38,19 @@ try {
   });
   await check('daily summaries stay outside the knowledge library, update one date/file and open in a separate reader',async()=>{
     await go('archives');assert.equal(await page.locator('#navigation a[href="#archives"]').count(),1);for(const removed of ['profile','journal','portable'])assert.equal(await page.locator('#navigation a[href="#'+removed+'"]').count(),0);
-    const notes=structuredClone((await state()).data.notes);await act('codex-sync').click();await page.locator('[data-daily-archive]').waitFor();let current=await state();let summary=current.data.dailyArchives[0];assert.ok(!summary.body.includes('我的当天工作'));assert.ok(summary.body.includes('未运行性能测试'));assert.deepEqual(current.data.notes,notes);assert.deepEqual(await fs.readdir(current.codexDir),['2026-10-16.md']);
-    const revision=current.revision;await act('codex-sync').click();await page.getByText('同步完成：新增 0 份，更新 0 份，未变化 1 份').waitFor();assert.equal((await state()).revision,revision);
-    await fs.writeFile(dailyFile,'# 2026-10-16 工作摘要\n\n- 合并当天的重要结果，性能待验证。\n');await fs.appendFile(file,msg('assistant','不应复制的原始输出'));await act('codex-sync').click();await page.waitForFunction(async()=>{const s=await(await fetch('/api/state')).json();return s.data.dailyArchives?.some(n=>n.body.includes('合并当天'))});current=await state();assert.equal(current.data.dailyArchives.length,1);assert.deepEqual(current.data.notes,notes);assert.deepEqual(await fs.readdir(current.codexDir),['2026-10-16.md']);
+    const notes=structuredClone((await state()).data.notes);assert.equal(await act('codex-sync').count(),0);assert.equal(await page.locator('#codex-since').count(),0);await page.locator('[data-daily-archive]').waitFor();let current=await view();let summary=current.data.dailyArchives[0];assert.ok(!summary.body.includes('我的当天工作'));assert.ok(summary.body.includes('未运行性能测试'));assert.deepEqual(current.data.notes,notes);assert.deepEqual(await fs.readdir(current.codexDir),['2026-10-16.md']);
+    const revision=current.revision;await go('archives');assert.equal((await state()).revision,revision);
+    await fs.writeFile(dailyFile,'# 2026-10-16 工作摘要\n\n- 合并当天的重要结果，性能待验证。\n');await fs.appendFile(file,msg('assistant','不应复制的原始输出'));await go('archives');await page.getByText('合并当天的重要结果，性能待验证。',{exact:true}).waitFor();current=await view();assert.equal(current.data.dailyArchives.length,1);assert.deepEqual(current.data.notes,notes);assert.deepEqual(await fs.readdir(current.codexDir),['2026-10-16.md']);
     const [reader]=await Promise.all([page.waitForEvent('popup'),page.getByRole('link',{name:'查看摘要 ↗',exact:true}).click()]);await reader.waitForLoadState('networkidle');assert.ok((await reader.locator('#reader').innerText()).includes('合并当天的重要结果'));assert.ok(!(await reader.locator('#reader').innerText()).includes('不应复制的原始输出'));const [download]=await Promise.all([reader.waitForEvent('download'),reader.getByRole('button',{name:'下载 Markdown'}).click()]);assert.equal(download.suggestedFilename(),'2026-10-16.md');assert.equal(await fs.readFile(await download.path(),'utf8'),current.data.dailyArchives[0].body);await reader.close();
     await page.locator('#archive-filter-form [name=search]').fill('合并当天');await page.locator('#archive-filter-form button[type=submit]').click();assert.equal(await page.locator('[data-daily-archive]').count(),1);
     await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   });
   await check('historical summary and detailed personal profile are independent files, searchable and downloadable outside the knowledge library',async()=>{
     await fs.writeFile(path.join(worklogs,'历史工作总结.md'),'# 历史工作总结\n\n- 算子与性能研究的重要工作。\n');await fs.writeFile(path.join(worklogs,'我的个人档案.md'),'# 我的个人档案\n\n## 本人明确陈述\n\n- 研究生阶段做过 DCU 上的 CFD。\n\n## 待确认\n\n- 长期职业方向。\n');
-    const notes=structuredClone((await state()).data.notes);await go('archives');await act('codex-sync').click();await page.locator('[data-archive-document=profile]').waitFor();assert.equal(await page.locator('[data-archive-document]').count(),2);assert.deepEqual((await state()).data.notes,notes);
-    await page.getByText('每天如何自动总结？',{exact:true}).click();assert.ok((await page.locator('.archive-how').innerText()).includes('没有配置每天定时调用 AI'));
+    const notes=structuredClone((await state()).data.notes);await go('archives');await page.locator('[data-archive-document=profile]').waitFor();assert.equal(await page.locator('[data-archive-document]').count(),2);assert.deepEqual((await state()).data.notes,notes);
+    await page.getByText('归档什么时候更新？',{exact:true}).click();assert.ok((await page.locator('.archive-how').innerText()).includes('北京时间 00:00'));
     const [profile]=await Promise.all([page.waitForEvent('popup'),page.getByRole('link',{name:'查看个人档案 ↗',exact:true}).click()]);await profile.waitForLoadState('networkidle');assert.ok((await profile.locator('#reader').innerText()).includes('DCU'));assert.equal(await profile.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-    const [download]=await Promise.all([profile.waitForEvent('download'),profile.getByRole('button',{name:'下载 Markdown'}).click()]);assert.equal(download.suggestedFilename(),'我的个人档案.md');assert.equal(await fs.readFile(await download.path(),'utf8'),(await state()).data.archiveDocuments.find(d=>d.id==='profile').body);await profile.close();
+    const [download]=await Promise.all([profile.waitForEvent('download'),profile.getByRole('button',{name:'下载 Markdown'}).click()]);assert.equal(download.suggestedFilename(),'我的个人档案.md');assert.equal(await fs.readFile(await download.path(),'utf8'),(await view()).data.archiveDocuments.find(d=>d.id==='profile').body);await profile.close();
     await go('archives/profile');await page.locator('[data-archive-document=profile]').waitFor();await go('archives');await page.getByRole('button',{name:'搜索全部内容'}).click();await page.locator('#global-search').fill('CFD');await page.getByRole('link',{name:/我的个人档案/}).waitFor();await act('close').last().click();
   });
   assert.deepEqual(errors,[]);console.log(`Work archive E2E complete: ${passed} groups passed; all data isolated.`);

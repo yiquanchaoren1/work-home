@@ -9,15 +9,16 @@ export const isLegacyCodexNote=note=>Boolean(note.codex);
 
 // Codex writes the actual synthesis after doing the work. The website only
 // synchronizes those summaries; it never turns transcript excerpts into facts.
-export async function collectDailySummaries({workspaceRoot,since='',worklogDir=path.join(workspaceRoot,'docs','codex_worklogs')}={}) {
+export async function collectDailySummaries({workspaceRoot,since='',before='',worklogDir=path.join(workspaceRoot,'docs','codex_worklogs')}={}) {
   if(typeof workspaceRoot!=='string')throw new Error('未设置工作区范围');
   if(since&&!validArchiveDate(since))throw new Error('同步起始日期无效');
+  if(before&&!validArchiveDate(before))throw new Error('归档截止日期无效');
   let entries;
   try{entries=await fs.readdir(worklogDir,{withFileTypes:true});}catch(error){if(error.code==='ENOENT')return {documents:[],archiveDocuments:[],warnings:[],stats:{scanned:0}};throw error;}
   const documents=[],warnings=[];let scanned=0;
   for(const entry of entries.sort((a,b)=>a.name.localeCompare(b.name))) {
     if(!entry.isFile()||!/^\d{4}-\d{2}-\d{2}\.md$/.test(entry.name))continue;
-    const date=entry.name.slice(0,10);if(!validArchiveDate(date)||(since&&date<since))continue;
+    const date=entry.name.slice(0,10);if(!validArchiveDate(date)||(since&&date<since)||(before&&date>=before))continue;
     scanned++;
     try {
       const file=path.join(worklogDir,entry.name),stat=await fs.stat(file);

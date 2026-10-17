@@ -35,7 +35,7 @@ function pdfBytes() {
 const pdf = pdfBytes();
 const file = (name, buffer, mimeType) => ({ name, buffer: Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer), mimeType });
 async function startServer(directory, port = 0) {
-  const processHandle = spawn(process.execPath, ['server.mjs'], { cwd: project, env: { ...process.env, WORK_HUB_DATA_DIR: directory, PORT: String(port) }, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  const processHandle = spawn(process.execPath, ['server.mjs'], { cwd: project, env: { ...process.env, WORK_HUB_DATA_DIR: directory, WORK_HUB_WORKSPACE_ROOT:temporary, PORT: String(port) }, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   servers.add(processHandle);
   let output = '';
   const address = await new Promise((resolve, reject) => {
@@ -107,7 +107,7 @@ try {
   });
 
   let taskId, linkId, recordId;
-  await check('task, link and verification CRUD persists through the real API', async () => {
+  await check('task and link edits persist while retired evidence remains in the backup data', async () => {
     await navigate('tasks'); await page.locator('[data-action="new"][data-collection="tasks"]').click();
     await field('title').fill('磁盘研发事项'); await field('summary').fill('核对磁盘持久化'); await field('nextStep').fill('记录验证结果'); await save();
     taskId = (await json()).data.tasks.find(item => item.title === '磁盘研发事项').id;
@@ -115,18 +115,16 @@ try {
     await page.locator('[data-action="new"][data-collection="links"]').click();
     await field('title').fill('研发资料'); await field('url').fill('https://example.com/review'); await save();
     linkId = (await json()).data.links.find(item => item.title === '研发资料').id;
-    await page.locator('[data-action="new"][data-collection="records"]').click();
-    await field('title').fill('本机验证'); await field('body').fill('当前快照功能验证'); await field('result').selectOption('通过'); await save();
-    recordId = (await json()).data.records.find(item => item.title === '本机验证').id;
+    const old=await json();recordId='retired-evidence';old.data.records.push({id:recordId,title:'本机验证',kind:'源码核对',result:'通过',environment:'',version:'',command:'',log:'',body:'已有证据保留',taskId,createdAt:stamp,updatedAt:stamp});
+    const seeded=await fetch(base+'/api/state',{method:'PUT',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify({revision:old.revision,data:old.data})});assert.equal(seeded.status,200);await page.reload({waitUntil:'networkidle'});
+    assert.equal(await page.locator('[data-action="new"][data-collection="records"]').count(),0);assert.equal(await page.locator('#navigation a[href="#records"]').count(),0);
     await page.locator('[data-action="edit"][data-collection="tasks"]').click();
     await field('summary').fill('修改也已落盘'); await save();
     await page.locator('[data-action="edit"][data-collection="links"]').click(); await field('description').fill('修改后的用途'); await save();
-    await page.locator(`[data-action="view"][data-collection="records"][data-id="${recordId}"]`).click();
-    await action('edit', modal(page)).click(); await field('body').fill('修改后的证据'); await save();
     const current = (await json()).data;
     assert.equal(current.tasks.find(item => item.id === taskId).summary, '修改也已落盘');
     assert.equal(current.links.find(item => item.id === linkId).description, '修改后的用途');
-    assert.equal(current.records.find(item => item.id === recordId).body, '修改后的证据');
+    assert.equal(current.records.find(item => item.id === recordId).body, '已有证据保留');
     assert.equal(current.links.find(item => item.id === linkId).taskId, taskId);
   });
 
@@ -230,7 +228,7 @@ try {
     await modal(page).locator('button[type="submit"]').click();
     await page.waitForFunction(() => document.querySelector('#form-error').textContent.includes('模拟磁盘写入失败'));
     assert.equal(await modal(page).isVisible(), true); assert.equal(await field('body').inputValue(), '# 保存失败时的草稿\n');
-    assert.deepEqual(await json(), before);
+    const after=await json();assert.deepEqual(after.data,before.data);assert.equal(after.revision,before.revision);
     assert.equal(await page.locator('.toast:not(.error)').filter({ hasText: '已保存' }).count(), 0);
     await page.unroute('**/api/state'); await save();
     assert.equal((await json()).data.notes.find(item => item.id === markdownId).body, '# 保存失败时的草稿\n');
@@ -269,7 +267,7 @@ try {
     await restoredContext.close(); await stopServer(restoredServer.process);
   });
 
-  await check('deleting a task retains its related documents and unlinking/deleting other records works', async () => {
+  await check('deleting a task retains related documents and retired evidence without exposing the retired module', async () => {
     await navigate(`detail/${taskId}`);
     await page.locator('[data-action="delete"][data-collection="tasks"]').click(); await action('confirm-delete', modal(page)).click(); await modal(page).waitFor({ state: 'hidden' });
     let current = (await json()).data;
@@ -278,8 +276,8 @@ try {
     assert.equal(current.links.find(item => item.id === linkId).taskId, '');
     assert.equal(current.records.find(item => item.id === recordId).taskId, '');
     await navigate('links'); await page.locator(`[data-action="edit"][data-id="${linkId}"]`).click(); await action('delete', modal(page)).click(); await action('confirm-delete', modal(page)).click(); await modal(page).waitFor({ state: 'hidden' });
-    await navigate('records'); await page.locator(`[data-action="view"][data-id="${recordId}"]`).click(); await action('edit', modal(page)).click(); await action('delete', modal(page)).click(); await action('confirm-delete', modal(page)).click(); await modal(page).waitFor({ state: 'hidden' });
-    current = (await json()).data; assert.equal(current.links.length, 0); assert.equal(current.records.length, 0); assert.equal(current.notes.length, 5);
+    await navigate('records');assert.equal(await page.locator('#navigation a[href="#records"]').count(),0);assert.equal(await page.locator('.record-card').count(),0);
+    current = (await json()).data; assert.equal(current.links.length, 0); assert.equal(current.records.length, 1); assert.equal(current.notes.length, 5);
   });
 
   assert.deepEqual(pageErrors, [], `Unexpected browser errors: ${pageErrors.join('; ')}`);

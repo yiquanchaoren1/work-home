@@ -1,5 +1,5 @@
 import { validateBackup, mergeData } from './store.js';
-import { buildPersonalDocument } from './personal.js';
+import { buildPersonalDocument, dayKey } from './personal.js';
 import { validArchiveDate, validateDailyArchives } from './daily-archives.js';
 import { archiveDocumentKinds, validateArchiveDocuments } from './archive-documents.js';
 
@@ -26,7 +26,7 @@ const fileType = (bytes, name) => {
 
 /** GitHub is the durable store. This object holds credentials only in memory. */
 export class GithubWorkspace {
-  #token; #fetch; #ready = false; #pending = Promise.resolve();
+  #token; #fetch; #ready = false; #pending = Promise.resolve(); #archiveCache = new Map();
   constructor({owner, repo, branch = '', token, fetchImpl = globalThis.fetch.bind(globalThis)}) {
     if (!/^[A-Za-z0-9-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo) || typeof branch !== 'string' || /[\u0000-\u0020]/.test(branch)) throw failure('仓库地址格式无效');
     if (typeof token !== 'string' || !token.trim()) throw failure('请输入 GitHub 访问密钥');
@@ -84,6 +84,16 @@ export class GithubWorkspace {
     if (typeof value.revision !== 'string') throw failure('私有仓库的数据缺少版本号');
     return {...this.envelope({revision:value.revision, data:validateBackup(value.data)}), sha:file.sha};
   }
+  async readWithArchives({now = new Date()} = {}) {
+    const current=await this.state(),cutoff=dayKey(now),checkedAt=now.toISOString();
+    try {
+      const view=await this.archiveView(current,{before:cutoff});
+      return {...current,data:view.data,archiveSync:{...view.stats,automatic:true,cutoff,checkedAt}};
+    }catch(error){
+      const cached=await this.archiveView(current,{before:cutoff,cachedOnly:true});
+      return {...current,data:cached.data,archiveSync:{...cached.stats,automatic:true,cutoff,checkedAt,warnings:[error.message,...cached.stats.warnings]}};
+    }
+  }
   async save(data, revision) { return this.queue(() => this.saveNow(data, revision)); }
   async saveNow(data, revision) {
     const clean = validateBackup(data), current = await this.state();
@@ -117,7 +127,7 @@ export class GithubWorkspace {
     return file.bytes;
   }
   async backup() {
-    const current = await this.state(), files = [], seen = new Set();
+    const current = await this.readWithArchives(), files = [], seen = new Set();
     for (const note of current.data.notes) if (note.attachment && !seen.has(note.attachment.id)) { const meta = note.attachment; files.push({...meta, base64:encodeBytes(await this.attachment(meta))}); seen.add(meta.id); }
     return {...current.data, files};
   }
@@ -159,28 +169,38 @@ export class GithubWorkspace {
       return this.saveNow(mode === 'merge' ? mergeData(current.data,incoming) : incoming, revision);
     });
   }
-  async personalDocument() { const state = await this.state(); return {markdown:buildPersonalDocument(state.data), path:state.masterPath, revision:state.revision}; }
+  async personalDocument() { const state = await this.readWithArchives(); return {markdown:buildPersonalDocument(state.data), path:state.masterPath, revision:state.revision}; }
+  async archiveView(current,{since='',before='',cachedOnly=false} = {}) {
+    const entries=cachedOnly?[...this.#archiveCache.entries()].map(([name,value])=>({name,sha:value.sha,type:'file'})):await this.file('codex-worklogs',true) || [];
+    if(!Array.isArray(entries))throw failure('摘要来源不是文件夹，请检查私有仓库的 codex-worklogs。');
+    const data=structuredClone(current.data);
+    const stats={added:0,updated:0,unchanged:0,documents:0,warnings:[],archiveDocuments:{added:0,updated:0,unchanged:0}};
+    for(const entry of entries) {
+      const date=entry.name.replace(/\.md$/,''),kind=Object.entries(archiveDocumentKinds).find(([,v])=>v.filename===entry.name);
+      if(entry.type!=='file'||(!kind&&(!validArchiveDate(date)||(since&&date<since)||(before&&date>=before))))continue;
+      const cached=this.#archiveCache.get(entry.name);
+      const apply=body=>{
+        const at=new Date().toISOString();
+        const old=(kind?data.archiveDocuments:data.dailyArchives)?.find(x=>kind?x.id===kind[0]:x.date===date);
+        const value={...(kind?{id:kind[0]}:{date}),title:kind?kind[1].title:`${date} 工作摘要`,body,createdAt:old?.createdAt||at,updatedAt:at};
+        if(kind)validateArchiveDocuments([value]);else validateDailyArchives([value]);
+        const target=kind?(data.archiveDocuments ||= []):(data.dailyArchives ||= []);
+        const counter=kind?stats.archiveDocuments:stats;
+        if(!old){target.push(value);counter.added++;}else if(old.body!==body){Object.assign(old,value);counter.updated++;}else counter.unchanged++;
+        if(!kind)stats.documents++;
+      };
+      try {
+        const body=cachedOnly||(entry.sha&&cached?.sha===entry.sha)?cached.body:decoder.decode((await this.file('codex-worklogs/'+entry.name)).bytes);
+        apply(body);this.#archiveCache.set(entry.name,{sha:entry.sha,body});
+      }catch(error){stats.warnings.push(`${entry.name}：${error.message}`);if(cached&&!cachedOnly)apply(cached.body);}
+    }
+    return {data,stats};
+  }
   async sync(revision, since = '') {
     return this.queue(async () => {
       if (since && !validArchiveDate(since)) throw failure('同步起始日期无效');
       const current = await this.state(); if (current.revision !== revision) throw failure('其他设备已更新资料，请重新载入后同步。',409);
-      const entries = await this.file('codex-worklogs',true) || [], data = structuredClone(current.data);
-      data.dailyArchives ||= []; data.archiveDocuments ||= [];
-      const stats = {added:0,updated:0,unchanged:0,documents:0,warnings:[],archiveDocuments:{added:0,updated:0,unchanged:0}};
-      for (const entry of entries) {
-        const date = entry.name.replace(/\.md$/,''), kind = Object.entries(archiveDocumentKinds).find(([,v])=>v.filename===entry.name);
-        if (entry.type !== 'file' || (!kind && (!validArchiveDate(date) || (since && date < since)))) continue;
-        const body = decoder.decode((await this.file('codex-worklogs/'+entry.name)).bytes), at = new Date().toISOString();
-        const target = kind ? data.archiveDocuments : data.dailyArchives;
-        const old = target.find(x => kind ? x.id === kind[0] : x.date === date);
-        const value = {...(kind ? {id:kind[0]} : {date}),title:kind ? kind[1].title : `${date} 工作摘要`,body,createdAt:old?.createdAt||at,updatedAt:at};
-        try { if (kind) validateArchiveDocuments([value]); else validateDailyArchives([value]); } catch (error) { stats.warnings.push(`${entry.name}：${error.message}`); continue; }
-        const counter = kind ? stats.archiveDocuments : stats;
-        if (!old) { target.push(value); counter.added++; }
-        else if (old.body !== body) { Object.assign(old,value); counter.updated++; }
-        else counter.unchanged++;
-        if (!kind) stats.documents++;
-      }
+      const {data,stats}=await this.archiveView(current,{since});
       const changed = stats.added+stats.updated+stats.archiveDocuments.added+stats.archiveDocuments.updated;
       return {...(changed ? await this.saveNow(data,revision) : current), codexSync:stats};
     });
