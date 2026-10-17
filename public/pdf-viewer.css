@@ -1,0 +1,32 @@
+.pdf-viewer { min-width: 0; max-width: 100%; overflow: hidden; border: 1px solid #dbe4d5; border-radius: 10px; background: #f1f4ed; color: #3d5541; }
+.pdf-viewer [hidden] { display: none !important; }
+.pdf-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; min-height: 54px; padding: 10px 13px; border-bottom: 1px solid #dce5d5; background: #f8faf5; }
+.pdf-control-group { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.pdf-button { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 32px; padding: 5px 9px; border: 1px solid #d8e3d1; border-radius: 6px; background: #fff; color: #4e6e44; font: inherit; font-size: 13px; line-height: 1.4; cursor: pointer; }
+.pdf-button:hover:not(:disabled) { border-color: #9fb894; background: #edf5e7; }
+.pdf-button:disabled { cursor: not-allowed; opacity: .4; }
+.pdf-page-input { width: 55px; min-width: 0; height: 32px; padding: 5px 7px; border: 1px solid #d4e0cc; border-radius: 5px; background: #fff; color: #3f6037; font: inherit; font-size: 12px; text-align: center; }
+.pdf-page-count { color: #667b5a; font-size: 11px; white-space: nowrap; }
+.pdf-zoom-select { width: 104px; min-width: 0; height: 32px; padding: 4px 6px; border: 1px solid #d4e0cc; border-radius: 5px; background: #fff; color: #4e6e44; font: inherit; font-size: 11px; }
+.pdf-load-status { min-height: 33px; margin: 0; padding: 8px 14px; color: #66785b; font-size: 11px; line-height: 1.6; background: #f8faf5; }
+.pdf-load-status.error { padding-block: 17px; color: #955744; background: #fcf3ed; }
+.pdf-stage { min-width: 0; max-width: 100%; max-height: 78vh; min-height: 160px; padding: 16px; overflow: auto; background: #e8ede3; overscroll-behavior: contain; }
+.pdf-canvas { display: block; margin: 0 auto; background: #fff; box-shadow: 0 2px 12px rgb(40 62 32 / 12%); }
+.pdf-viewer-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 10px 14px; border-top: 1px solid #dce5d5; background: #f8faf5; color: #687b5c; font-size: 10px; line-height: 1.7; }
+.pdf-local-tip { flex: 1; min-width: 130px; }
+.pdf-download { flex-shrink: 0; color: #386845; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.pdf-viewer-footer .pdf-button { min-height: 28px; font-size: 11px; }
+.pdf-password-form { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 10px; padding: 20px; background: #fff; }
+.pdf-password-label { display: block; flex: 1; min-width: 200px; color: #526c45; font-size: 12px; line-height: 1.8; }
+.pdf-password-input { display: block; width: 100%; height: 37px; margin-top: 9px; padding: 8px 11px; border: 1px solid #c8d8bd; border-radius: 6px; color: #3d5934; background: #fff; font: inherit; }
+.pdf-button:focus-visible, .pdf-page-input:focus-visible, .pdf-zoom-select:focus-visible, .pdf-password-input:focus-visible, .pdf-stage:focus-visible { outline: 3px solid #9ab98a; outline-offset: 2px; }
+@media (max-width: 700px) {
+  .pdf-toolbar { justify-content: center; padding: 9px; gap: 8px 14px; }
+  .pdf-control-group { gap: 5px; }
+  .pdf-button { min-width: 31px; min-height: 33px; padding-inline: 8px; }
+  .pdf-stage { padding: 9px; max-height: 74vh; }
+  .pdf-load-status { padding-inline: 11px; }
+  .pdf-viewer-footer { padding: 10px 11px; }
+  .pdf-password-form { padding: 16px; }
+  .pdf-password-label { min-width: 100%; }
+}

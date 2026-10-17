@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-cloud/
+artifacts/
+*.log
+*.tar.gz
+*.zip
+data/

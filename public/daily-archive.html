@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>每日摘要 · 工作间</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./document.css">
+  <link rel="stylesheet" href="./ui-refresh.css">
+  <script type="module" src="./daily-archive.js"></script>
+</head>
+<body class="document-page">
+  <header class="reader-topbar">
+    <a class="reader-brand" href="./#archives"><span class="brand-mark">间</span><span>工作间 <small>工作档案 / 每日摘要</small></span></a>
+    <nav class="reader-actions" aria-label="摘要操作">
+      <a class="button secondary" href="./#archives">返回工作档案</a>
+      <button class="button primary" id="summary-download" hidden>下载 Markdown</button>
+    </nav>
+  </header>
+  <main class="reader-shell" id="reader" aria-live="polite"><p class="reader-loading">正在读取本机摘要……</p></main>
+  <footer class="reader-footer">每天一份摘要 · 本机保存</footer>
+</body>
+</html>

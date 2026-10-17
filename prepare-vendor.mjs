@@ -1,0 +1,15 @@
+import { cpSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root=path.dirname(fileURLToPath(import.meta.url));
+const copy=(from,to)=>{mkdirSync(path.dirname(path.join(root,to)),{recursive:true});cpSync(path.join(root,from),path.join(root,to),{recursive:true});};
+copy('node_modules/marked/lib/marked.esm.js','public/vendor/marked.esm.js');
+copy('node_modules/marked/LICENSE','public/vendor/marked.LICENSE');
+copy('node_modules/dompurify/dist/purify.es.mjs','public/vendor/purify.esm.js');
+copy('node_modules/dompurify/LICENSE','public/vendor/dompurify.LICENSE');
+copy('node_modules/dompurify/LICENSE-MPL','public/vendor/dompurify.LICENSE-MPL');
+copy('node_modules/pdfjs-dist/build/pdf.mjs','public/vendor/pdfjs/pdf.mjs');
+copy('node_modules/pdfjs-dist/build/pdf.worker.mjs','public/vendor/pdfjs/pdf.worker.mjs');
+copy('node_modules/pdfjs-dist/LICENSE','public/vendor/pdfjs/LICENSE');
+for(const name of ['cmaps','standard_fonts','wasm'])copy('node_modules/pdfjs-dist/'+name,'public/vendor/pdfjs/'+name);
+console.log('Prepared vendored runtime assets from locked npm dependencies.');
