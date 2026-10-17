@@ -6,7 +6,7 @@ const counters=new Map();
 export function applyTheme(theme='light') {
   const value=theme==='dark'?'dark':'light';
   document.documentElement.dataset.theme=value;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',document.documentElement.dataset.design==='porcelain'?(value==='dark'?'#181e19':'#f8f9f5'):(value==='dark'?'#0c1715':'#f3f6f3'));
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',document.documentElement.dataset.design==='experimental'?(value==='dark'?'#101012':'#171719'):document.documentElement.dataset.design==='porcelain'?(value==='dark'?'#181e19':'#f8f9f5'):(value==='dark'?'#0c1715':'#f3f6f3'));
   const button=document.querySelector('[data-action="theme-toggle"]');
   if(button){button.setAttribute('aria-label',value==='dark'?'切换到浅色主题':'切换到深色主题');button.title=button.getAttribute('aria-label');button.setAttribute('aria-pressed',String(value==='dark'));button.innerHTML=value==='dark'?'☀':'☾';}
 }

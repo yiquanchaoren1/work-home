@@ -37,7 +37,7 @@ try {
     assert.equal(await page.locator('.gallery-focus [data-task-id]').count(),1);
     assert.match(await page.locator('.gallery-continue').innerText(),/梳理算子实现/);
     assert.match(await page.locator('.gallery-journal h2').innerText(),new RegExp(yesterday));
-    assert.equal(await page.locator('.porcelain-vessel').count(),1);
+    assert.equal(await page.locator('.experimental-collage .cut-paper').count(),1);
     assert.equal(await page.locator('.gallery-cover').evaluate(el=>getComputedStyle(el,'::after').display),'none');
     assert.equal(await page.locator('.gallery-focus .task-card').evaluate(el=>getComputedStyle(el).borderRadius),'0px');
   });
@@ -51,13 +51,13 @@ try {
       if(width===390||width===1440)await page.screenshot({path:`artifacts/gallery-production-${width}.png`,fullPage:width===390});
     }
   });
-  await check('dark controls and fresh readers share the porcelain and cinnabar theme',async()=>{
+  await check('dark controls and fresh readers share the experimental studio theme',async()=>{
     await page.getByRole('button',{name:'切换到深色主题',exact:true}).click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
-    assert.equal(await page.locator('.gallery-home-actions .button.primary').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(167, 71, 58)');
+    assert.equal(await page.locator('.gallery-home-actions .button.primary').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(216, 255, 62)');
     await page.screenshot({path:'artifacts/gallery-production-dark.png'});
     const reader=await browser.newPage({viewport:{width:390,height:844}});
     await reader.goto(base+'/document.html?id=gallery-note',{waitUntil:'networkidle'});await reader.locator('.markdown-body h1').waitFor();
-    assert.equal(await reader.locator('html').getAttribute('data-design'),'porcelain');assert.equal(await reader.locator('html').getAttribute('data-theme'),'dark');
+    assert.equal(await reader.locator('html').getAttribute('data-design'),'experimental');assert.equal(await reader.locator('html').getAttribute('data-theme'),'dark');
     assert.equal(await reader.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await reader.screenshot({path:'artifacts/gallery-production-reader.png',fullPage:true});await reader.close();
   });
