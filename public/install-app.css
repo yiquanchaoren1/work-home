@@ -1,0 +1,45 @@
+.install-panel { display:flex; align-items:center; gap:18px; margin-bottom:22px; }
+.install-panel img { flex-shrink:0; border-radius:15px; }
+.install-panel>div { flex:1; min-width:0; }
+.install-panel h2 { margin:3px 0 5px; font-size:18px; }
+.install-panel .button { flex-shrink:0; }
+dialog.install-dialog { width:min(500px,calc(100vw - 28px)); max-height:calc(100dvh - 28px); background:var(--surface); border-color:var(--border); border-radius:24px; overflow-y:auto; }
+.install-cover { position:relative; padding:30px 28px 24px; text-align:center; background:radial-gradient(ellipse at 50% 0,#416b3e 0,transparent 70%),#112d23; color:#f1ffe9; flex-shrink:0; }
+.install-cover img { display:block; margin:0 auto 16px; border-radius:21px; box-shadow:0 10px 32px #0003; }
+.install-cover .eyebrow { color:#bdd8ac; font-size:9px; }
+.install-cover h2 { margin:7px 0; font-size:26px; letter-spacing:-.6px; }
+.install-cover p { color:#c0d6c5; font-size:12px; }
+.install-close { position:absolute; right:12px; top:10px; color:#e1f4d8; background:#ffffff10; border:1px solid #ffffff18; border-radius:50%; width:32px; height:32px; font-size:22px; }
+.install-features { display:flex; justify-content:center; gap:9px; margin-top:17px; }
+.install-features span { font-size:10px; padding:4px 10px; border:1px solid #d7f5bc25; border-radius:20px; color:#d9edce; }
+.install-body { padding:22px 25px 25px; }
+.install-status { font-size:12px; color:var(--muted); line-height:1.8; }
+.native-install { width:100%; margin-top:14px; min-height:44px; }
+.install-platform-tabs { display:flex; padding:4px; gap:3px; margin:19px 0 13px; background:var(--surface-soft); border:1px solid var(--border); border-radius:12px; }
+.install-platform-tabs button { flex:1; padding:9px 3px; border:0; background:transparent; color:var(--muted); border-radius:8px; font-size:12px; white-space:nowrap; }
+.install-platform-tabs button[aria-pressed="true"] { background:var(--surface); color:var(--primary); box-shadow:0 2px 6px #153b2310; font-weight:650; }
+.install-steps { padding-left:23px; margin:0; color:var(--ink); font-size:13px; line-height:1.9; }
+.install-steps li { padding-left:3px; margin:9px 0; }
+.install-steps li::marker { color:var(--primary); font-weight:700; }
+.install-note { margin-top:19px; padding:13px 15px; background:var(--surface-soft); border:1px solid var(--border); border-radius:12px; font-size:11px; }
+.install-note strong { color:var(--ink); font-weight:600; }
+.install-note p { margin-top:5px; color:var(--muted); line-height:1.8; }
+.cloud-install-entry { margin:3px auto 0; display:block; font-size:12px; }
+.topbar .install-app-entry { display:inline-flex; }
+[data-native-install][hidden], [data-install-steps][hidden] { display:none; }
+@media (max-width:600px) {
+  .install-panel { flex-wrap:wrap; gap:13px; }
+  .install-panel .button { width:100%; min-height:44px; }
+  .install-panel h2 { font-size:16px; }
+  .topbar-actions .install-app-entry { flex-shrink:0; }
+  .cloud-login input { font-size:16px; }
+}
+@media (max-width:480px) {
+  .topbar .search-box { width:clamp(100px,calc(100vw - 210px),148px); }
+  .topbar .install-app-entry { width:31px; min-width:31px; }
+}
+@media (display-mode:standalone) {
+  .topbar { padding-top:calc(15px + env(safe-area-inset-top,0px)); padding-left:max(18px,env(safe-area-inset-left,0px)); padding-right:max(18px,env(safe-area-inset-right,0px)); }
+  .sidebar { padding-top:calc(32px + env(safe-area-inset-top,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px)); }
+  .page-footer { padding-bottom:calc(20px + env(safe-area-inset-bottom,0px)); }
+}

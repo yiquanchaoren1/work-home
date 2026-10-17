@@ -47,6 +47,9 @@ function promptLogin() {
   return new Promise(resolve => {
     const modal = document.createElement('dialog');modal.className='modal cloud-login';
     modal.innerHTML = `<form class="cloud-login-form"><div class="cloud-login-mark" aria-hidden="true">间</div><div class="eyebrow">YOUR PRIVATE WORKSPACE</div><h1>打开你的云端工作间</h1><p class="hint">资料只从你的私有仓库读取。关闭页面后，访问密钥会从当前会话中清除。</p><label class="field">资料仓库<input name="repository" required autocomplete="off" placeholder="用户名/资料仓库" aria-label="资料仓库"></label><label class="field">GitHub 访问密钥<input name="token" type="password" required autocomplete="off" spellcheck="false" placeholder="只授权资料仓库的访问密钥" aria-label="GitHub 访问密钥"></label><p class="hint">首次使用：<a target="_blank" rel="noopener noreferrer" href="https://github.com/settings/personal-access-tokens/new">创建访问密钥 ↗</a>，仅选择资料仓库，Contents 设置为 Read and write。不要使用 GitHub 登录密码。</p><p class="form-error" role="alert"></p><button class="button primary" type="submit">连接私有资料</button><p class="cloud-login-foot">网站不会把密钥写入源码、localStorage、IndexedDB 或 Cookie。</p></form>`;
+    const install = document.createElement('button');
+    install.type='button';install.className='text-button cloud-install-entry';install.dataset.installApp='';install.setAttribute('aria-haspopup','dialog');install.textContent='安装到手机 · 查看步骤';
+    modal.querySelector('form').append(install);
     const form = modal.querySelector('form'), button = form.querySelector('button'), error = form.querySelector('[role="alert"]');
     form.elements.repository.value = cloudConfig.owner && cloudConfig.repo ? cloudConfig.owner+'/'+cloudConfig.repo : '';
     modal.addEventListener('cancel',event=>event.preventDefault());

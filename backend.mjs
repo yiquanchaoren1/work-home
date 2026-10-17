@@ -369,7 +369,7 @@ async function serveAttachment(req, res, workspace, id, download) {
 
 export async function createWorkHubServer({ dataDir, publicDir = path.join(projectDir, 'public'),workspaceRoot } = {}) {
   const workspace = new FileWorkspace(dataDir,{workspaceRoot}); await workspace.init(); const root = path.resolve(publicDir);
-  const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.otf': 'font/otf' };
+  const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json; charset=utf-8', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.otf': 'font/otf' };
   const server = http.createServer(async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'same-origin'); res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
     if (req.url.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
