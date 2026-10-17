@@ -18,7 +18,7 @@ try {
   const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
   const check=async(name,fn)=>{await fn();passed++;console.log('PASS '+name);};
   const go=async route=>{await page.evaluate(r=>location.hash=r,route);await page.waitForFunction(r=>document.body.dataset.page===r,route);};
-  const mode=async target=>{if(await page.locator('html').getAttribute('data-theme')!==target){await page.locator('.topbar [data-action="theme-toggle"]').click();await page.waitForFunction(m=>document.documentElement.dataset.theme===m,target);}};
+  const mode=async target=>{if(await page.locator('html').getAttribute('data-theme')!==target){await page.locator('.topbar [data-action="theme-toggle"]').click();await page.waitForFunction(m=>document.documentElement.dataset.theme===m,target);await page.waitForFunction(()=>!document.body.dataset.saving);}};
   const pick=async design=>{await page.locator('#theme-picker-button').click();await page.locator('#modal.appearance-modal[open]').waitFor();await page.locator(`#modal [data-design-id="${design}"]`).click();await page.locator('#modal').waitFor({state:'hidden'});await page.waitForFunction(d=>document.documentElement.dataset.design===d,design);};
   const lightness=()=>page.evaluate(()=>{const n=getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g).slice(0,3).map(Number);return n.reduce((a,b)=>a+b,0)/765;});
   await page.goto(base,{waitUntil:'networkidle'});await page.locator('.gallery-cover').waitFor();

@@ -1,10 +1,14 @@
-import { cloudMode, githubSession } from './cloud-session.js?v=themes-20261017';
+import { cloudMode, githubSession, rememberReaderState, readerPreview } from './cloud-session.js?v=perf-20261018';
 export { cloudMode };
+export { readerPreview };
 // Disk mode uses localhost; Pages mode uses the user's private GitHub repository.
-async function request(url, options = {}) {
+async function request(url, options = {}, readOptions = {}) {
   if (cloudMode) {
     const workspace=await githubSession(),value=options.body&&typeof options.body==='string'?JSON.parse(options.body):{};
-    if(url==='/api/state')return options.method==='PUT'?workspace.save(value.data,value.revision):workspace.readWithArchives();
+    if(url==='/api/state'){
+      const state=await (options.method==='PUT'?workspace.save(value.data,value.revision):readOptions.archive||readOptions.date?workspace.readArchive(readOptions):readOptions.archives===false?workspace.state({reuse:true}):workspace.readWithArchives());
+      rememberReaderState(state);return state;
+    }
     if(url==='/api/personal-document')return workspace.personalDocument();
     if(url==='/api/codex/sync')return workspace.sync(value.revision,value.since);
     if(url==='/api/backup')return workspace.backup();
@@ -29,7 +33,7 @@ async function request(url, options = {}) {
 }
 
 const json = (value, method = 'POST') => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) });
-export const readWorkspace = () => request('/api/state');
+export const readWorkspace = (options = {}) => request('/api/state',{},options);
 export const readPersonalDocument = () => request('/api/personal-document');
 export const syncCodexRecords = (revision,since='') => request('/api/codex/sync',json({revision,since}));
 export const writeWorkspace = (data, revision) => request('/api/state', json({ data, revision }, 'PUT'));

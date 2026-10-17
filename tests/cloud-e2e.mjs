@@ -43,7 +43,7 @@ try {
     assert.equal(await page.evaluate(()=>localStorage.length+sessionStorage.length),0);assert.equal(await context.cookies().then(c=>c.length),0);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   });
   await check('mobile edits save privately and new document tabs inherit only an in-memory session',async()=>{
-    await page.locator('.topbar [data-action="theme-toggle"]').click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');assert.equal(state().settings.theme,'dark');
+    await page.locator('.topbar [data-action="theme-toggle"]').click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');await page.waitForFunction(()=>!document.body.dataset.saving);assert.equal(state().settings.theme,'dark');
     await page.evaluate(()=>location.hash='notes');await page.getByRole('heading',{name:'知识库',exact:true}).waitFor();
     const popup=page.waitForEvent('popup');await page.locator('a[href="./document.html?id=private-note"]').first().click();const reader=await popup;await reader.locator('.markdown-body h1').waitFor();assert.equal(await reader.locator('.markdown-body h1').textContent(),'Cloud note');assert.equal(await reader.locator('.cloud-login').count(),0);assert.equal(await reader.locator('html').getAttribute('data-theme'),'dark');assert.ok(reader.url().startsWith(base+'document.html'));
     await reader.locator('#document-edit').click();await reader.locator('#document-body').fill('# Updated from mobile\n\nSaved to private GitHub.');await reader.locator('button[form="editor-form"]').click();await reader.locator('#modal').waitFor({state:'hidden'});assert.match(state().notes[0].body,/Updated from mobile/);await reader.close();

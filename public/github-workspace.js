@@ -13,6 +13,14 @@ export const encodeBytes = bytes => {
 export const decodeBytes = text => Uint8Array.from(atob(text.replace(/\s/g, '')), c => c.charCodeAt(0));
 const digest = async bytes => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(x => x.toString(16).padStart(2, '0')).join('');
 const metaEqual = (a, b) => ['id', 'name', 'type', 'size'].every(k => a[k] === b[k]);
+async function parallelMap(items, operation, limit = 4) {
+  let index = 0;
+  const results = new Array(items.length);
+  await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{
+    while(index<items.length){const at=index++;results[at]=await operation(items[at]);}
+  }));
+  return results;
+}
 const features = ['personal-archive-v1', 'task-links-v1', 'daily-archive-v2', 'archive-documents-v1', 'ui-refresh-v1','appearance-v1', 'github-storage-v1'];
 const fileType = (bytes, name) => {
   const head = decoder.decode(bytes.subarray(0, 12));
@@ -27,6 +35,7 @@ const fileType = (bytes, name) => {
 /** GitHub is the durable store. This object holds credentials only in memory. */
 export class GithubWorkspace {
   #token; #fetch; #ready = false; #pending = Promise.resolve(); #archiveCache = new Map();
+  #current; #currentAt = 0; #verifiedAttachments = new Map();
   constructor({owner, repo, branch = '', token, fetchImpl = globalThis.fetch.bind(globalThis)}) {
     if (!/^[A-Za-z0-9-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo) || typeof branch !== 'string' || /[\u0000-\u0020]/.test(branch)) throw failure('仓库地址格式无效');
     if (typeof token !== 'string' || !token.trim()) throw failure('请输入 GitHub 访问密钥');
@@ -50,8 +59,8 @@ export class GithubWorkspace {
   }
   async connect() {
     const meta = await (await this.api('')).json();
-    if (meta.private !== true) throw failure('资料仓库必须是私有仓库，当前连接已拒绝。');
-    if (meta.archived) throw failure('资料仓库已归档，不能保存。');
+    if (meta.private !== true) {this.#ready=false;throw failure('资料仓库必须是私有仓库，当前连接已拒绝。');}
+    if (meta.archived) {this.#ready=false;throw failure('资料仓库已归档，不能保存。');}
     this.branch ||= meta.default_branch || 'main';
     this.#ready = true; return this;
   }
@@ -77,15 +86,19 @@ export class GithubWorkspace {
     const root = `GitHub 私有仓库：${this.owner}/${this.repo}`;
     return {...value, features, dataDir:root, masterPath:root + '/个人主档案（按当前资料生成）', codexDir:root + '/codex-worklogs', archiveDir:root + '/workspace.json 内的独立档案', codexWorkspace:root};
   }
-  async state() {
+  async state({reuse = false} = {}) {
+    // Only reuse a just-read, authenticated snapshot within this page. Saves always read fresh.
+    if(reuse && this.#ready && this.#current && Date.now()-this.#currentAt<1500)return structuredClone(this.#current);
     await this.connect();
     const file = await this.file('workspace.json');
     let value; try { value = JSON.parse(decoder.decode(file.bytes)); } catch { throw failure('私有仓库的数据文件损坏，未覆盖任何内容。'); }
     if (typeof value.revision !== 'string') throw failure('私有仓库的数据缺少版本号');
-    return {...this.envelope({revision:value.revision, data:validateBackup(value.data)}), sha:file.sha};
+    this.#current={...this.envelope({revision:value.revision, data:validateBackup(value.data)}), sha:file.sha};
+    this.#currentAt=Date.now();
+    return structuredClone(this.#current);
   }
   async readWithArchives({now = new Date()} = {}) {
-    const current=await this.state(),cutoff=dayKey(now),checkedAt=now.toISOString();
+    const current=await this.state({reuse:true}),cutoff=dayKey(now),checkedAt=now.toISOString();
     try {
       const view=await this.archiveView(current,{before:cutoff});
       return {...current,data:view.data,archiveSync:{...view.stats,automatic:true,cutoff,checkedAt}};
@@ -99,18 +112,30 @@ export class GithubWorkspace {
     const clean = validateBackup(data), current = await this.state();
     if (current.revision !== revision) throw failure('其他设备已更新资料，本次没有覆盖。请保留草稿并重新载入。', 409);
     for(const key of ['theme','design'])if(current.data.settings[key]&&!Object.hasOwn(clean.settings,key))clean.settings[key]=current.data.settings[key];
-    for (const note of clean.notes) if (note.attachment) {
-      const file = await this.file(`files/${note.attachment.id}.json`);
-      if (!metaEqual(JSON.parse(decoder.decode(file.bytes)), note.attachment)) throw failure('附件信息不一致，未保存工作台。');
+    const existing=current.data.notes.filter(n=>n.attachment).map(n=>n.attachment);
+    const needed=new Map();
+    for(const note of clean.notes)if(note.attachment){
+      const meta=note.attachment,signature=JSON.stringify(meta);
+      // Unchanged references in the freshly-read committed workspace are already accepted.
+      // New/changed references still require metadata validation; opening a file verifies its bytes.
+      if(existing.some(old=>metaEqual(old,meta)) || this.#verifiedAttachments.get(meta.id)===signature)continue;
+      needed.set(signature,meta);
     }
+    await parallelMap([...needed.values()],async meta=>{
+      const file=await this.file(`files/${meta.id}.json`);
+      if(!metaEqual(JSON.parse(decoder.decode(file.bytes)),meta))throw failure('附件信息不一致，未保存工作台。');
+      this.#verifiedAttachments.set(meta.id,JSON.stringify(meta));
+    });
     const value = {revision:crypto.randomUUID(), data:clean}, bytes = encoder.encode(JSON.stringify(value, null, 2));
     if (bytes.length > 64 * 1024 * 1024) throw failure('资料超过 64 MiB，请拆分正文后重试。');
-    await this.put('workspace.json', bytes, current.sha);
+    const saved=await this.put('workspace.json', bytes, current.sha);
+    this.#current={...this.envelope(value),sha:saved.content?.sha};this.#currentAt=Date.now();
     return this.envelope(value);
   }
   async storeFile(meta, bytes) {
     await this.put(`files/${meta.id}.bin`, bytes);
     await this.put(`files/${meta.id}.json`, encoder.encode(JSON.stringify({...meta, sha256:await digest(bytes)})));
+    this.#verifiedAttachments.set(meta.id,JSON.stringify(meta));
   }
   async upload(file) {
     return this.queue(async () => {
@@ -121,11 +146,11 @@ export class GithubWorkspace {
     });
   }
   async attachment(meta) {
-    const stored = await this.file(`files/${meta.id}.json`), info = JSON.parse(decoder.decode(stored.bytes));
+    const [stored,file]=await Promise.all([this.file(`files/${meta.id}.json`),this.file(`files/${meta.id}.bin`)]);
+    const info = JSON.parse(decoder.decode(stored.bytes));
     if (!metaEqual(info, meta)) throw failure('附件信息不一致');
-    const file = await this.file(`files/${meta.id}.bin`);
     if (file.bytes.length !== meta.size || !info.sha256 || info.sha256 !== await digest(file.bytes)) throw failure('附件校验失败，请从备份恢复原件。');
-    return file.bytes;
+    this.#verifiedAttachments.set(meta.id,JSON.stringify(meta));return file.bytes;
   }
   async backup() {
     const current = await this.readWithArchives(), files = [], seen = new Set();
@@ -171,12 +196,30 @@ export class GithubWorkspace {
     });
   }
   async personalDocument() { const state = await this.readWithArchives(); return {markdown:buildPersonalDocument(state.data), path:state.masterPath, revision:state.revision}; }
-  async archiveView(current,{since='',before='',cachedOnly=false} = {}) {
-    const entries=cachedOnly?[...this.#archiveCache.entries()].map(([name,value])=>({name,sha:value.sha,type:'file'})):await this.file('codex-worklogs',true) || [];
+  async readArchive({date,archive} = {}) {
+    const kind=archiveDocumentKinds[archive],filename=kind?.filename || (validArchiveDate(date)&&date<dayKey()?date+'.md':'');
+    if(!filename)throw failure('档案地址无效，或当天摘要尚未结束。');
+    const current=await this.state({reuse:true});
+    const result=await this.archiveView(current,{onlyName:filename});
+    return {...current,data:result.data,warning:result.stats.warnings.join('；')};
+  }
+  async archiveView(current,{since='',before='',cachedOnly=false,onlyName=''} = {}) {
+    const entries=onlyName?[{name:onlyName,type:'file'}]:cachedOnly?[...this.#archiveCache.entries()].map(([name,value])=>({name,sha:value.sha,type:'file'})):await this.file('codex-worklogs',true) || [];
     if(!Array.isArray(entries))throw failure('摘要来源不是文件夹，请检查私有仓库的 codex-worklogs。');
     const data=structuredClone(current.data);
     const stats={added:0,updated:0,unchanged:0,documents:0,warnings:[],archiveDocuments:{added:0,updated:0,unchanged:0}};
-    for(const entry of entries) {
+    const selected=entries.filter(entry=>{
+      const date=entry.name.replace(/\.md$/,''),kind=Object.values(archiveDocumentKinds).some(v=>v.filename===entry.name);
+      return entry.type==='file'&&(kind||(validArchiveDate(date)&&(!since||date>=since)&&(!before||date<before)));
+    });
+    const bodies=await parallelMap(selected,async entry=>{
+      const cached=this.#archiveCache.get(entry.name);
+      try {
+        const body=cachedOnly||(entry.sha&&cached?.sha===entry.sha)?cached.body:decoder.decode((await this.file('codex-worklogs/'+entry.name)).bytes);
+        return {body};
+      }catch(error){return {error};}
+    });
+    for(const [index,entry] of selected.entries()) {
       const date=entry.name.replace(/\.md$/,''),kind=Object.entries(archiveDocumentKinds).find(([,v])=>v.filename===entry.name);
       if(entry.type!=='file'||(!kind&&(!validArchiveDate(date)||(since&&date<since)||(before&&date>=before))))continue;
       const cached=this.#archiveCache.get(entry.name);
@@ -191,7 +234,8 @@ export class GithubWorkspace {
         if(!kind)stats.documents++;
       };
       try {
-        const body=cachedOnly||(entry.sha&&cached?.sha===entry.sha)?cached.body:decoder.decode((await this.file('codex-worklogs/'+entry.name)).bytes);
+        if(bodies[index].error)throw bodies[index].error;
+        const body=bodies[index].body;
         apply(body);this.#archiveCache.set(entry.name,{sha:entry.sha,body});
       }catch(error){stats.warnings.push(`${entry.name}：${error.message}`);if(cached&&!cachedOnly)apply(cached.body);}
     }

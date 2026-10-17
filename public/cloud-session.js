@@ -1,10 +1,11 @@
 import { cloudConfig } from './cloud-config.js';
-import { GithubWorkspace } from './github-workspace.js?v=themes-20261017';
+import { GithubWorkspace } from './github-workspace.js?v=perf-20261018';
 import { createDeviceSession } from './device-session.js';
 
 export const cloudMode = cloudConfig.enabled === true;
 let connection, connecting, credentials;
 let remembered = false, deviceMessage = '';
+let readerState, inheritedSession;
 const pendingReaders = new Map();
 const trustedReaders = new Set();
 const appRoot = new URL('./',import.meta.url);
@@ -23,9 +24,22 @@ export function refreshConnectionPanel() {
 }
 
 async function connect(value) {
-  const workspace=await new GithubWorkspace(value).connect();
+  const workspace=new GithubWorkspace(value);
   await workspace.state();
   return workspace;
+}
+
+export function rememberReaderState(state) {
+  if(cloudMode && state?.data && typeof state.revision==='string')readerState=structuredClone(state);
+}
+function previewFor(url) {
+  if(!readerState)return null;
+  const {data,...meta}=readerState;
+  const note=url.pathname.endsWith('/document.html')&&data.notes.find(n=>n.id===url.searchParams.get('id'));
+  const archive=url.searchParams.get('archive'),date=url.searchParams.get('date');
+  const document=url.pathname.endsWith('/daily-archive.html')&&(archive?data.archiveDocuments?.find(n=>n.id===archive):data.dailyArchives?.find(n=>n.date===date));
+  if(!note&&!document)return null;
+  return {...meta,data:{settings:data.settings,notes:note?[note]:[],tasks:note?data.tasks.filter(t=>t.id===note.taskId).map(t=>({id:t.id,title:t.title})):[],...(archive?{archiveDocuments:[document]}:{dailyArchives:document?[document]:[]})}};
 }
 
 async function discardInvalidSaved(cause) {
@@ -49,7 +63,7 @@ if (cloudMode && typeof window !== 'undefined') {
         await deviceSession.save(credentials);remembered=true;deviceMessage='';refreshConnectionPanel();
       }else if(button.dataset.cloudSession==='logout') {
         await deviceSession.clear();remembered=false;connection=credentials=undefined;
-        pendingReaders.clear();trustedReaders.clear();sessionChannel?.postMessage({type:'signout'});
+        readerState=undefined;pendingReaders.clear();trustedReaders.clear();sessionChannel?.postMessage({type:'signout'});
         location.replace(appRoot.href);
       }
     }catch(cause){deviceMessage=cause.message;refreshConnectionPanel();}
@@ -60,7 +74,8 @@ if (cloudMode && typeof window !== 'undefined') {
     if (event.origin !== location.origin || event.data?.type !== 'work-hub-reader-request' || !credentials || (pendingReaders.get(nonce) !== event.source && !trustedReaders.has(event.source))) return;
     try { if(![appRoot.pathname,appRoot.pathname+'index.html',appRoot.pathname+'document.html',appRoot.pathname+'daily-archive.html'].includes(event.source.location.pathname))return; } catch { return; }
     pendingReaders.delete(nonce);
-    event.source.postMessage({type:'work-hub-reader-session',nonce,credentials},location.origin);
+    const url=new URL(event.source.location.href);
+    event.source.postMessage({type:'work-hub-reader-session',nonce,credentials,snapshot:previewFor(url)},location.origin);
   });
   document.addEventListener('click',event => {
     const anchor = event.target.closest?.('a[target="_blank"]');
@@ -76,18 +91,25 @@ if (cloudMode && typeof window !== 'undefined') {
   });
 }
 
-async function readerSession() {
+function readerSession() {
+  return inheritedSession ||= requestReaderSession();
+}
+async function requestReaderSession() {
   const sharedNonce = new URLSearchParams(location.hash.slice(1)).get('cloud-session');
   if (!window.opener) return null;
   const nonce = sharedNonce || crypto.randomUUID();
   if(sharedNonce)history.replaceState(null,'',location.pathname+location.search);
   return new Promise(resolve => {
     const finish = value => { clearTimeout(timer);window.removeEventListener('message',receive);resolve(value); };
-    const receive = event => { if (event.origin === location.origin && event.source === window.opener && event.data?.type === 'work-hub-reader-session' && event.data.nonce === nonce) finish(event.data.credentials); };
+    const receive = event => { if (event.origin === location.origin && event.source === window.opener && event.data?.type === 'work-hub-reader-session' && event.data.nonce === nonce) finish({credentials:event.data.credentials,snapshot:event.data.snapshot}); };
     const timer = setTimeout(()=>finish(null),1800);
     window.addEventListener('message',receive);
     window.opener.postMessage({type:'work-hub-reader-request',nonce},location.origin);
   });
+}
+export async function readerPreview() {
+  if(!cloudMode)return null;
+  return (await readerSession())?.snapshot || null;
 }
 
 function promptLogin({saved=null,notice=''} = {}) {
@@ -140,7 +162,7 @@ export async function githubSession() {
     if(saved){try{const workspace=await connect(saved);connection=workspace;credentials=saved;return workspace;}
       catch(cause){try{notice=await discardInvalidSaved(cause);}catch{notice='无法清除失效登录信息，请检查设备的存储设置。';}if(!remembered)saved=null;}}
     const inherited=await readerSession();
-    if(inherited){try{connection=await new GithubWorkspace(inherited).connect();credentials=inherited;return connection;}catch{/* Ask again if the parent session no longer works. */}}
+    if(inherited?.credentials){try{connection=await connect(inherited.credentials);credentials=inherited.credentials;return connection;}catch{/* Ask again if the parent session no longer works. */}}
     return promptLogin({saved,notice});
   })().finally(()=>{connecting=undefined;});
   return connecting;

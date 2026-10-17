@@ -26,8 +26,8 @@ export function fakeGithub(initial = structuredClone(seedData)) {
     if(options.headers.Accept==='application/vnd.github.raw+json')return new Response(item.bytes);
     return Response.json({type:'file',sha:item.sha,encoding:'base64',content:encodeBytes(item.bytes)});
   };
-  const make=()=>new GithubWorkspace({owner:'example',repo:'private-data',token:'test-only-token',fetchImpl});
-  return {files,calls,install,make,publicRepo:()=>{isPrivate=false;},offline:()=>{broken=true;},archiveFailure:()=>{archivesBroken=true;}};
+  const make=(options={})=>new GithubWorkspace({owner:'example',repo:'private-data',token:'test-only-token',fetchImpl,...options});
+  return {files,calls,install,make,fetchImpl,publicRepo:()=>{isPrivate=false;},offline:()=>{broken=true;},archiveFailure:()=>{archivesBroken=true;}};
 }
 
 test('GitHub mode rejects public data repositories and keeps working data behind authentication',async()=>{
@@ -109,4 +109,62 @@ test('automatic archive source failure does not block the workbench or erase per
   const fake=fakeGithub(initial),workspace=await fake.make().connect();fake.archiveFailure();
   const result=await workspace.readWithArchives({now:new Date('2026-10-18T02:00:00Z')});
   assert.deepEqual(result.data,initial);assert.equal(result.archiveSync.warnings.length,1);assert.equal(result.archiveSync.automatic,true);
+});
+
+test('immediate session reads reuse an independent snapshot but saves still recheck privacy and revisions',async()=>{
+  const fake=fakeGithub(),workspace=fake.make(),first=await workspace.state();
+  assert.equal(fake.calls.length,2);
+  const reused=await workspace.state({reuse:true});reused.data.settings.name='unsaved mutation';
+  assert.equal(fake.calls.length,2);assert.equal((await workspace.state({reuse:true})).data.settings.name,first.data.settings.name);
+  fake.publicRepo();await assert.rejects(workspace.save(first.data,first.revision),/必须是私有/);
+  assert.equal(fake.calls.filter(c=>c.method==='PUT').length,0);
+});
+
+test('ordinary saves use three requests independent of unchanged attachment count',async()=>{
+  const initial=structuredClone(seedData),at='2026-10-17T00:00:00Z';
+  for(let i=0;i<8;i++)initial.notes.push({id:'unchanged-note-'+i,title:'附件'+i,format:'text',body:'',category:'其他',tags:[],pinned:false,taskId:'',createdAt:at,updatedAt:at,attachment:{id:crypto.randomUUID(),name:'file'+i+'.txt',type:'text/plain',size:8}});
+  const fake=fakeGithub(initial),workspace=fake.make(),first=await workspace.state();fake.calls.length=0;
+  first.data.settings.theme='dark';const saved=await workspace.save(first.data,first.revision);
+  assert.equal(fake.calls.length,3);assert.equal(fake.calls.filter(c=>c.address.includes('/files/')).length,0);
+  assert.deepEqual(saved.data.notes,initial.notes);assert.equal(saved.data.settings.theme,'dark');
+});
+
+test('new attachment checks run with bounded parallelism and mismatches still prevent writes',async()=>{
+  const fake=fakeGithub(),at='2026-10-17T00:00:00Z';let active=0,maximum=0;
+  const workspace=fake.make({fetchImpl:async(url,options)=>{
+    if(url.includes('/files/')){active++;maximum=Math.max(maximum,active);await new Promise(r=>setTimeout(r,10));active--;}
+    return fake.fetchImpl(url,options);
+  }}),first=await workspace.state();
+  for(let i=0;i<9;i++){
+    const meta={id:crypto.randomUUID(),name:'new'+i+'.txt',type:'text/plain',size:8};fake.install('files/'+meta.id+'.json',JSON.stringify(meta));
+    first.data.notes.push({id:'new-note-'+i,title:'新附件'+i,format:'text',body:'',category:'其他',tags:[],pinned:false,taskId:'',createdAt:at,updatedAt:at,attachment:meta});
+  }
+  const saved=await workspace.save(first.data,first.revision);assert.equal(maximum,4);
+  saved.data.notes.find(n=>n.attachment).attachment.name='wrong.txt';const before=fake.calls.filter(c=>c.method==='PUT').length;
+  await assert.rejects(workspace.save(saved.data,saved.revision),/附件信息不一致/);
+  assert.equal(fake.calls.filter(c=>c.method==='PUT').length,before);
+});
+
+test('one archive reader only requests its source while full archive loading is bounded and ordered',async()=>{
+  const fake=fakeGithub();let active=0,maximum=0;
+  for(let day=1;day<=10;day++){const date='2026-10-'+String(day).padStart(2,'0');fake.install('codex-worklogs/'+date+'.md','# '+date+'\n\n- 已核实结果。');}
+  const workspace=fake.make({fetchImpl:async(url,options)=>{
+    if(url.includes('/codex-worklogs/')){active++;maximum=Math.max(maximum,active);await new Promise(r=>setTimeout(r,10));active--;}
+    return fake.fetchImpl(url,options);
+  }});
+  await workspace.state();fake.calls.length=0;
+  const one=await workspace.readArchive({date:'2026-10-03'});assert.equal(fake.calls.length,1);assert.equal(one.data.dailyArchives.length,1);
+  assert.ok(fake.calls[0].address.includes('/codex-worklogs/2026-10-03.md'));
+  const full=await workspace.readWithArchives({now:new Date('2026-10-18T02:00:00Z')});assert.equal(full.data.dailyArchives.length,10);assert.equal(maximum,4);
+  assert.deepEqual(full.data.dailyArchives.map(n=>n.date),Array.from({length:10},(_,i)=>'2026-10-'+String(i+1).padStart(2,'0')));
+});
+
+test('a remote change between read and PUT still loses no data with the optimized save path',async()=>{
+  const fake=fakeGithub();let race=false;
+  const workspace=fake.make({fetchImpl:async(url,options)=>{
+    if(race&&options.method==='PUT'){race=false;fake.install('workspace.json',JSON.stringify({revision:'someone-else',data:{...seedData,settings:{...seedData.settings,name:'other device'}}}));}
+    return fake.fetchImpl(url,options);
+  }}),first=await workspace.state();race=true;first.data.settings.theme='dark';
+  await assert.rejects(workspace.save(first.data,first.revision),e=>e.status===409);
+  assert.equal((await workspace.state()).data.settings.name,'other device');
 });

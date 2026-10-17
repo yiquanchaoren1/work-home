@@ -52,7 +52,7 @@ try {
     }
   });
   await check('dark controls and fresh readers share the experimental studio theme',async()=>{
-    await page.getByRole('button',{name:'切换到深色主题',exact:true}).click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+    await page.getByRole('button',{name:'切换到深色主题',exact:true}).click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');await page.waitForFunction(()=>!document.body.dataset.saving);
     assert.equal(await page.locator('.gallery-home-actions .button.primary').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(216, 255, 62)');
     await page.screenshot({path:'artifacts/gallery-production-dark.png'});
     const reader=await browser.newPage({viewport:{width:390,height:844}});

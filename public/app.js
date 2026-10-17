@@ -1,13 +1,13 @@
 import { STORAGE_KEY, createId, normalizeUrl, parseLinks, validateBackup } from './store.js?v=themes-20261017';
 import { seedData } from './seed.js';
 import { renderMarkdown, markdownExcerpt, documentTitle, embedLocalImages } from './markdown.js';
-import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode } from './local-api.js?v=themes-20261017';
-import { createPersonalUI } from './personal-ui.js?v=themes-20261017';
+import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode } from './local-api.js?v=perf-20261018';
+import { createPersonalUI } from './personal-ui.js?v=perf-20261018';
 import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
 import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=themes-20261017';
 import { installAppPanel } from './install-app.js';
-import { cloudConnectionPanel,refreshConnectionPanel } from './cloud-session.js?v=themes-20261017';
+import { cloudConnectionPanel,refreshConnectionPanel } from './cloud-session.js?v=perf-20261018';
 import { renderStudioDashboard } from './studio-dashboard.js?v=themes-20261017';
 import {designFor,designs,themeChoices} from './appearance.js?v=themes-20261017';
 
@@ -86,7 +86,7 @@ async function initialize() {
   if(initializing||busy||modal.open)return;
   initializing=true;
   try {
-    acceptState(await readWorkspace());
+    acceptState(await readWorkspace(cloudMode?{archives:false}:{}));
     if(!cloudMode)try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw !== null) {
@@ -101,6 +101,7 @@ async function initialize() {
     }
   } catch (error) { loadError = error.message; }
   initializing=false; render(); openEditRoute();
+  if(cloudMode&&!loadError)void reloadWorkspace(true);
 }
 async function reloadWorkspace(silent = false) {
   if (busy || initializing || reloading || modal.open) return;
@@ -116,21 +117,29 @@ async function reloadWorkspace(silent = false) {
   } catch (error) { if (!silent) { loadError=error.message; render(); } }
   finally {reloading=false;}
 }
-async function withBusy(operation) {
+async function withBusy(operation, label = '正在处理，请稍候…') {
   if (busy) throw new Error('正在保存到本机，请稍候。');
   busy = true;
-  const buttons = $$('button,input,select,textarea').filter(button=>!button.disabled);
+  const scope=modal.open?modal:document.activeElement?.closest('form');
+  const buttons = scope?[...scope.querySelectorAll('button,input,select,textarea')].filter(button=>!button.disabled):[];
   buttons.forEach(button=>button.disabled=true);
+  const pending=document.createElement('div');pending.className='toast sync-pending';pending.setAttribute('role','status');pending.textContent=label;
+  (modal.open?(modal.querySelector('.modal-footer')||modal.querySelector('.modal-body')):$('#toasts')).append(pending);
+  document.body.dataset.saving='true';
   try { return await operation(); }
-  finally { busy=false; buttons.forEach(button=>{if(button.isConnected)button.disabled=false;}); }
+  finally { busy=false;pending.remove();delete document.body.dataset.saving;buttons.forEach(button=>{if(button.isConnected)button.disabled=false;}); }
 }
-async function commit(mutator, message) {
+async function commit(mutator, message, {preview = false} = {}) {
+  if(busy)throw new Error('正在保存上一项更改，请稍候。');
   if (loadError || initializing || revision === undefined) throw new Error('本机数据暂时无法读取，请启动服务并重新载入。');
   const next = structuredClone(data);
   mutator(next);
   if (message) next.activity.unshift({id:createId(),text:message,at:new Date().toISOString()});
   next.activity = next.activity.slice(0,300);
-  acceptState(await withBusy(()=>writeWorkspace(next, revision))); render();
+  const previous=data;
+  if(preview){data=validateBackup(next);applyTheme(data.settings.theme,data.settings.design);render();}
+  try {acceptState(await withBusy(()=>writeWorkspace(next, revision),'正在保存到'+(cloudMode?'云端':'本机')+'，完成前请勿关闭页面…'));render();}
+  catch(error){if(preview){data=previous;applyTheme(data.settings.theme,data.settings.design);render();}throw error;}
 }
 function empty(title, text, action = '', actionText = '') { return `<div class="empty-state">${icon('folder')}<h3>${title}</h3><p>${text}</p>${action?`<button class="button secondary small" data-action="${action}">${icon('plus')}${actionText}</button>`:''}</div>`; }
 function pageHeader(eyebrow,title,description,actions='') { return `<div class="page-header"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="page-description">${description}</p></div><div class="header-actions">${actions}</div></div>`; }
@@ -399,7 +408,7 @@ document.addEventListener('submit',async event=>{
     const fields=Object.fromEntries([...fd].filter(([k])=>k!=='taskLinkIds').map(([k,v])=>[k,collection==='notes'&&k==='body'?String(v):String(v).trim()]));if(!fields.title)throw new Error('请填写标题');
     if(collection!=='records'){fields.tags=(fields.tags||'').split(/[,，]/).map(s=>s.trim()).filter(Boolean);fields.pinned=fd.has('pinned');}
     if(collection==='links')fields.url=normalizeUrl(fields.url);
-    await commit(next=>{if(collection==='links'&&next.links.some(l=>l.id!==id&&normalizeUrl(l.url)===fields.url))throw new Error('该链接已经存在，可在链接库中编辑。'); const index=next[collection].findIndex(x=>x.id===id);if(id&&index<0)throw new Error('内容已被其他窗口删除，请重新打开。');const value={...(index>=0?next[collection][index]:{id:createId(),createdAt:now}),...fields,updatedAt:now};if(index>=0)next[collection][index]=value;else if(collection==='tasks')next.tasks.unshift(value);else next[collection].push(value);if(collection==='tasks')setTaskLinks(next,value.id,selectedLinks);},`${id?'更新':'添加'}${kinds[collection]}：${fields.title}`);
+    await commit(next=>{if(collection==='links'&&next.links.some(l=>l.id!==id&&normalizeUrl(l.url)===fields.url))throw new Error('该链接已经存在，可在链接库中编辑。'); const index=next[collection].findIndex(x=>x.id===id);if(id&&index<0)throw new Error('内容已被其他窗口删除，请重新打开。');const value={...(index>=0?next[collection][index]:{id:createId(),createdAt:now}),...fields,updatedAt:now};if(index>=0)next[collection][index]=value;else if(collection==='tasks')next.tasks.unshift(value);else next[collection].push(value);if(collection==='tasks')setTaskLinks(next,value.id,selectedLinks);},`${id?'更新':'添加'}${kinds[collection]}：${fields.title}`,{preview:collection==='tasks'});
     noteDirty=false;modal.close();toast('已保存到本机');
   }catch(e){formError(e);}
 });
@@ -431,12 +440,12 @@ document.addEventListener('click',async event=>{
       if(!appearanceSupported)throw new Error('请重新启动本机服务后切换视觉主题；现有资料不会改变。');
       const preset=designs.find(item=>item.id===el.dataset.designId);if(!preset)throw new Error('主题不存在');
       const fromPicker=modal.open&&modal.classList.contains('appearance-modal');
-      if(designFor(data.settings.design).id!==preset.id||data.settings.theme!==preset.mode)await commit(next=>{next.settings.design=preset.id;next.settings.theme=preset.mode;});
+      if(designFor(data.settings.design).id!==preset.id||data.settings.theme!==preset.mode)await commit(next=>{next.settings.design=preset.id;next.settings.theme=preset.mode;},undefined,{preview:true});
       if(fromPicker){modal.close();$('#theme-picker-button')?.focus();}else document.querySelector(`[data-design-id="${preset.id}"]`)?.focus();
       toast(`已切换为${preset.label}`);return;
     }
     if(action==='theme-toggle'){
-      await commit(next=>{next.settings.theme=next.settings.theme==='dark'?'light':'dark';});
+      await commit(next=>{next.settings.theme=next.settings.theme==='dark'?'light':'dark';},undefined,{preview:true});
       const label=data.settings.theme==='dark'?'切换到浅色主题':'切换到深色主题';if(modal.open&&modal.classList.contains('appearance-modal'))modal.querySelector('[data-action="theme-toggle"]').textContent=label;
       toast(data.settings.theme==='dark'?'已切换到深色主题':'已切换到浅色主题');return;
     }
@@ -550,7 +559,7 @@ document.addEventListener('change',async event=>{
       const previous=data.tasks.find(task=>task.id===id)?.status;
       if(value!==previous)try {
         if(!statuses.includes(value))throw new Error('工作状态无效');
-        await commit(next=>{const task=next.tasks.find(task=>task.id===id);if(!task)throw new Error('事项已不存在');task.status=value;task.updatedAt=new Date().toISOString();},`事项状态更新为：${value}`);
+        await commit(next=>{const task=next.tasks.find(task=>task.id===id);if(!task)throw new Error('事项已不存在');task.status=value;task.updatedAt=new Date().toISOString();},`事项状态更新为：${value}`,{preview:true});
         offerUndo('状态已保存到本机',next=>{const task=next.tasks.find(task=>task.id===id);if(!task)throw new Error('事项已不存在');task.status=previous;task.updatedAt=new Date().toISOString();},'撤销了事项状态调整');
       } catch(error) { if(control.isConnected)control.value=previous||'';throw error; }
     }

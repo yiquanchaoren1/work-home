@@ -1,5 +1,5 @@
 import { renderMarkdown } from './markdown.js';
-import { readWorkspace, attachmentUrl, cloudMode } from './local-api.js?v=themes-20261017';
+import { readWorkspace, attachmentUrl, cloudMode, readerPreview } from './local-api.js?v=perf-20261018';
 import { mountPdf } from './pdf-viewer.js';
 import { applyTheme } from './ui-effects.js?v=themes-20261017';
 
@@ -93,7 +93,17 @@ async function load(force = false) {
   if(loading)return;loading=true;const ticket=++generation;
   try {
     if(!id)throw new Error('文档地址缺少 ID，请从知识库重新打开。');
-    const state=await readWorkspace();
+    if(!currentNote&&!force){
+      const preview=await readerPreview(),note=preview?.data.notes?.find(item=>item.id===id);
+      // Text can be shown from the trusted opener without waiting for GitHub.
+      // Attachments still need authenticated integrity-checked bytes before rendering.
+      if(note&&!note.attachment){
+        applyTheme(preview.data.settings.theme,preview.data.settings.design);
+        await render(note,preview,ticket);signature=JSON.stringify([note,preview.data.tasks.find(item=>item.id===note.taskId)?.title]);
+        storageNotice('已显示当前会话内容，正在核对云端版本…');
+      }
+    }
+    const state=await readWorkspace({archives:false});
     applyTheme(state.data.settings.theme,state.data.settings.design);
     root.querySelector('.reader-refresh-warning')?.remove();
     storageNotice(state.warning);
