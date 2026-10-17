@@ -2,6 +2,7 @@ import { entryKinds,entryStates,journalFields,personalData,dayKey,buildPersonalD
 import { createId } from './store.js';
 import { readPersonalDocument, attachmentUrl } from './local-api.js';
 import { markdownExcerpt } from './markdown.js';
+import { renderArchiveTimeline } from './studio-archives.js';
 
 export function createPersonalUI(ctx) {
   const {esc,field,selectField,showModal,commit,toast,download}=ctx;
@@ -42,12 +43,12 @@ export function createPersonalUI(ctx) {
     const sync=ctx.archiveStatus?.()||{},warnings=sync.warnings||[];
     const checked=sync.checkedAt?new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(sync.checkedAt)):'';
     const visible=summaries.filter(n=>(!archiveDate||n.date===archiveDate)&&(!archiveSearch||[n.title,n.body].join(' ').toLowerCase().includes(archiveSearch.toLowerCase()))).sort((a,b)=>b.date.localeCompare(a.date));
-    return head('工作档案','每天一份简要总结，自动归档昨天的重要工作、结论与下一步。','')+archiveDocumentCard('history')+archiveDocumentCard('profile')+
-      `<section class="panel archive-auto-panel"><div><div class="eyebrow">A LITTLE PROGRESS, EVERY DAY</div><h2>每天零点，留住昨天</h2><p class="hint">北京时间 00:00 整理前一天摘要，上传完成后自动显示。打开页面或回到 App 时会自动检查更新。</p><p class="hint">一天一份，只留重要内容，独立收录在工作档案。</p></div><div class="archive-auto-state"><span class="badge ${warnings.length?'amber':'green'}">${warnings.length?'部分档案暂未更新':'自动更新'}</span><strong>${summaries.length}<small> 天工作积累</small></strong><p class="hint">${checked?'已检查 '+esc(checked):'等待首次归档'}</p></div></section>${warnings.length?`<section class="callout error"><div><strong>稍后会自动重试</strong><p>${warnings.map(esc).join('；')}</p></div></section>`:''}<details class="archive-how"><summary>归档什么时候更新？</summary><p>工作中由 Codex 合并当天记录，每天北京时间 00:00 再整理刚结束的一天并上传。同一天只保留一份摘要，不收录问答原文，也不进入知识库。今天的摘要会在明天归档后显示。</p><p>零点整理需要电脑和 Codex 能够运行；如果当时未运行，下次任务执行时会检查并补传漏传摘要。上传完成后，手机查看无需电脑开机。页面打开时会自动读取，也会定期检查更新。</p></details><form id="archive-filter-form" class="archive-filter"><label class="field">记录日期<input type="date" name="date" value="${esc(archiveDate)}"></label><label class="field">搜索摘要<input name="search" type="search" value="${esc(archiveSearch)}" placeholder="重要工作或结论"></label><button class="button secondary" type="submit">筛选</button>${action('codex-filter-clear','清除筛选')}</form><div class="personal-journals">${visible.map(n=>`<article class="panel" data-daily-archive="${esc(n.date)}"><div class="section-head"><div><div class="eyebrow">${n.date} · 每日摘要</div><h2>${esc(n.title)}</h2></div><a class="button secondary small" href="./daily-archive.html?date=${encodeURIComponent(n.date)}" target="_blank" rel="noopener noreferrer">查看摘要 ↗</a></div><p class="archive-prose">${esc(markdownExcerpt(n.body.replace(/^# .*\n+/,''),300))}</p><p class="hint">${n.date}.md</p></article>`).join('')||empty(summaries.length?'没有符合筛选条件的摘要':'首份归档完成后，会自动显示在这里')}</div>`;
+    return head('工作档案','每天一份简要总结，自动归档昨天的重要工作、结论与下一步。','')+`<div class="archive-shortcuts">${archiveDocumentCard('history')}${archiveDocumentCard('profile')}</div>`+
+      `<section class="panel archive-auto-panel"><div><div class="eyebrow">A LITTLE PROGRESS, EVERY DAY</div><h2>每天零点，留住昨天</h2><p class="hint">北京时间 00:00 整理前一天摘要，上传完成后自动显示。打开页面或回到 App 时会自动检查更新。</p><p class="hint">一天一份，只留重要内容，独立收录在工作档案。</p></div><div class="archive-auto-state"><span class="badge ${warnings.length?'amber':'green'}">${warnings.length?'部分档案暂未更新':'自动更新'}</span><strong>${summaries.length}<small> 天工作积累</small></strong><p class="hint">${checked?'已检查 '+esc(checked):'等待首次归档'}</p></div></section>${warnings.length?`<section class="callout error"><div><strong>稍后会自动重试</strong><p>${warnings.map(esc).join('；')}</p></div></section>`:''}<details class="archive-how"><summary>归档什么时候更新？</summary><p>工作中由 Codex 合并当天记录，每天北京时间 00:00 再整理刚结束的一天并上传。同一天只保留一份摘要，不收录问答原文，也不进入知识库。今天的摘要会在明天归档后显示。</p><p>零点整理需要电脑和 Codex 能够运行；如果当时未运行，下次任务执行时会检查并补传漏传摘要。上传完成后，手机查看无需电脑开机。页面打开时会自动读取，也会定期检查更新。</p></details><form id="archive-filter-form" class="archive-filter"><label class="field">记录日期<input type="date" name="date" value="${esc(archiveDate)}"></label><label class="field">搜索摘要<input name="search" type="search" value="${esc(archiveSearch)}" placeholder="重要工作或结论"></label><button class="button secondary" type="submit">筛选</button>${action('codex-filter-clear','清除筛选')}</form>${renderArchiveTimeline(visible,{esc,markdownExcerpt,empty:()=>empty(summaries.length?'没有符合筛选条件的摘要':'首份归档完成后，会自动显示在这里')})}`;
   }
   function archivePage(name,tab='') {
     const selected=name==='archives'?(tab||'records'):{profile:'profile',journal:'journal',portable:'export'}[name]||'records';
-    const tabs=[['records','每日摘要'],['profile','个人资料与偏好'],['journal','手动补充'],['export','迁移与导出']];
+    const tabs=[['records','每日摘要'],['profile','个人档案'],['journal','手动补充'],['export','我的 AI 文档']];
     return `<nav class="archive-tabs" aria-label="工作档案分区">${tabs.map(([key,label])=>`<a href="#archives/${key}" class="${selected===key?'active':''}" ${selected===key?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`+(selected==='profile'?profilePage():selected==='journal'?journalPage():selected==='export'?portablePage():recordsPage());
   }
   function entryForm(id='',defaults={}) {
@@ -98,6 +99,7 @@ export function createPersonalUI(ctx) {
   }
   async function handle(el) {
     const name=el.dataset.action,id=el.dataset.id;
+    if(name==='archive-month-jump'){document.querySelector(`[data-month-anchor="${CSS.escape(el.dataset.month)}"]`)?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth',block:'start'});return true;}
     if(!/^(personal-|journal-|archive-|codex-)/.test(name))return false;
     if(name==='codex-filter-clear'){archiveDate='';archiveSearch='';ctx.render();return true;}
     if(['personal-new','personal-edit','personal-upload','personal-source','personal-extract','personal-extract-selected','journal-new','journal-edit','journal-experience','personal-delete','journal-delete','archive-context'].includes(name)&&!ctx.discard())return true;

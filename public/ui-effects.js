@@ -1,5 +1,6 @@
 // Small, local effects. No remote fonts, animation runtime or browser storage.
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const counters=new Map();
 
 export function applyTheme(theme='light') {
   const value=theme==='dark'?'dark':'light';
@@ -12,6 +13,22 @@ export function applyTheme(theme='light') {
 export function refreshVisuals(root,entering=false) {
   for(const card of root.querySelectorAll('.stat-card,.panel,.task-card,.note-card,.link-card,.archive-how'))card.setAttribute('data-spotlight','');
   if(entering&&!reduced())root.animate([{opacity:.25,transform:'translateY(9px)'},{opacity:1,transform:'translateY(0)'}],{duration:330,easing:'cubic-bezier(.22,1,.36,1)'});
+  for(const number of root.querySelectorAll('[data-count-key]')) {
+    const key=number.dataset.countKey,value=number.textContent;
+    if(counters.has(key)&&counters.get(key)!==value&&!reduced())number.animate([{opacity:.3,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'ease-out'});
+    counters.set(key,value);
+  }
+}
+
+export function animateReorder(container,move,excluded) {
+  const positions=new Map([...container.children].map(el=>[el,el.getBoundingClientRect()]));
+  move();
+  if(reduced())return;
+  for(const element of container.children) {
+    const before=positions.get(element);if(!before||element===excluded)continue;
+    const after=element.getBoundingClientRect(),x=before.left-after.left,y=before.top-after.top;
+    if(x||y)element.animate([{transform:`translate(${x}px,${y}px)`},{transform:'translate(0,0)'}],{duration:190,easing:'cubic-bezier(.2,.8,.2,1)'});
+  }
 }
 
 export function installSpotlight() {
