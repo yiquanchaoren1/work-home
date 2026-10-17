@@ -1,4 +1,4 @@
-import {readWorkspace,readerPreview} from './local-api.js?v=sync-20261018';
+import {readWorkspace,readerPreview} from './local-api.js?v=sync2-20261018';
 import {renderMarkdown} from './markdown.js';
 import {archiveDocumentKinds} from './archive-documents.js';
 import {applyTheme} from './ui-effects.js?v=themes-20261017';

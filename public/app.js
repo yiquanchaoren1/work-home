@@ -1,14 +1,14 @@
 import { STORAGE_KEY, createId, normalizeUrl, parseLinks, validateBackup } from './store.js?v=themes-20261017';
 import { seedData } from './seed.js';
 import { renderMarkdown, markdownExcerpt, documentTitle, embedLocalImages } from './markdown.js';
-import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode,rememberReaderState } from './local-api.js?v=sync-20261018';
-import { BackgroundSync } from './background-sync.js?v=sync-20261018';
-import { createPersonalUI } from './personal-ui.js?v=sync-20261018';
+import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode,rememberReaderState } from './local-api.js?v=sync2-20261018';
+import { BackgroundSync } from './background-sync.js?v=sync2-20261018';
+import { createPersonalUI } from './personal-ui.js?v=sync2-20261018';
 import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
 import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=themes-20261017';
 import { installAppPanel } from './install-app.js';
-import { cloudConnectionPanel,refreshConnectionPanel,setPendingSyncCheck } from './cloud-session.js?v=sync-20261018';
+import { cloudConnectionPanel,refreshConnectionPanel,setPendingSyncCheck,reconnectGithubSession } from './cloud-session.js?v=sync2-20261018';
 import { renderStudioDashboard } from './studio-dashboard.js?v=themes-20261017';
 import {designFor,designs,themeChoices} from './appearance.js?v=themes-20261017';
 
@@ -58,7 +58,7 @@ function syncStatus(){
     host.hidden=!count;
     host.classList.toggle('is-error',failed);
     if(!count){host.replaceChildren();continue;}
-    host.innerHTML=`<div class="sync-strip-summary"><strong>${failed?'同步已暂停':state.active?'后台同步中':'等待后台同步'} · ${count} 项更改</strong><span>当前页面已更新${failed?'，草稿尚未上传':'，可以继续操作'}</span></div>${failed?`<p>${esc(state.error.message)}</p><p>未同步内容只保留在当前页面，刷新或关闭前请先同步或下载草稿。</p>`:''}<div class="sync-strip-actions">${failed?'<button type="button" class="button secondary small" data-sync-action="retry">重试同步</button>':''}<button type="button" class="text-button" data-sync-action="draft">下载草稿</button>${failed?'<button type="button" class="text-button" data-sync-action="discard">放弃草稿并载入云端</button>':''}</div>`;
+    host.innerHTML=`<div class="sync-strip-summary"><strong>${failed?'同步已暂停':state.active?'后台同步中':'等待后台同步'} · ${count} 项更改</strong><span>当前页面已更新${failed?'，草稿尚未上传':'，可以继续操作'}</span></div>${failed?`<p>${esc(state.error.message)}</p><p>未同步内容只保留在当前页面，刷新或关闭前请先同步或下载草稿。</p>`:''}<div class="sync-strip-actions">${failed?'<button type="button" class="button secondary small" data-sync-action="retry">重试同步</button><button type="button" class="text-button" data-sync-action="reconnect">重新连接资料仓库</button>':''}<button type="button" class="text-button" data-sync-action="draft">下载草稿</button>${failed?'<button type="button" class="text-button" data-sync-action="discard">放弃草稿并载入云端</button>':''}</div>`;
   }
 }
 function syncChanged(state){
@@ -643,6 +643,7 @@ if(background){
     const action=event.target.closest('[data-sync-action]')?.dataset.syncAction;if(!action)return;
     try{
       if(action==='retry')await background.retry();
+      if(action==='reconnect'){if(background.active)throw new Error('当前请求尚未结束，请稍后重新连接；草稿仍保留。');await reconnectGithubSession();await background.retry();}
       if(action==='draft')download(`Bing‘ House未同步草稿-${Date.now()}.json`,JSON.stringify(background.draft(),null,2));
       if(action==='discard'&&confirm('确定放弃当前页面全部未同步修改和当前编辑草稿并载入云端吗？如需保留，请先取消并下载草稿。')){await background.discardAndReload();noteDirty=false;modal.close();}
     }catch(error){toast(error.message,true);}

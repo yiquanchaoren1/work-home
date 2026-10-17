@@ -120,7 +120,8 @@ export async function readerPreview({refresh=false} = {}) {
 }
 
 function promptLogin({saved=null,notice=''} = {}) {
-  return new Promise(resolve => {
+  return new Promise((resolve,reject) => {
+    let canceled=false;
     const modal = document.createElement('dialog');modal.className='modal cloud-login';
     modal.innerHTML = `<form class="cloud-login-form"><div class="cloud-login-mark" aria-hidden="true">B</div><div class="eyebrow">YOUR PRIVATE WORKSPACE</div><h1>欢迎来到 Bing‘ House</h1><p class="hint">资料只从你的私有仓库读取。关闭页面后，访问密钥会从当前会话中清除。</p><label class="field">资料仓库<input name="repository" required autocomplete="off" placeholder="用户名/资料仓库" aria-label="资料仓库"></label><label class="field">GitHub 访问密钥<input name="token" type="password" required autocomplete="off" spellcheck="false" placeholder="只授权资料仓库的访问密钥" aria-label="GitHub 访问密钥"></label><p class="hint">首次使用：<a target="_blank" rel="noopener noreferrer" href="https://github.com/settings/personal-access-tokens/new">创建访问密钥 ↗</a>，仅选择资料仓库，Contents 设置为 Read and write。不要使用 GitHub 登录密码。</p><p class="form-error" role="alert"></p><button class="button primary" type="submit">连接私有资料</button><p class="cloud-login-foot">网站不会把密钥写入源码、localStorage、IndexedDB 或 Cookie。</p></form>`;
     modal.querySelector('.hint').textContent='首次输入访问密钥。记住此设备后，下次打开可自动连接，资料仍从私有仓库读取。';
@@ -128,6 +129,11 @@ function promptLogin({saved=null,notice=''} = {}) {
     remember.innerHTML='<input name="remember" type="checkbox"><span>记住此设备，下次自动连接<small>在此设备加密保存访问凭据，可在设置中退出并清除。</small></span>';
     const submit=modal.querySelector('button[type="submit"]');submit.before(remember);
     const retry=document.createElement('button');retry.type='button';retry.className='button secondary';retry.textContent='重试自动连接';retry.hidden=!saved;submit.before(retry);
+    if(hasPendingSync()){
+      const later=document.createElement('button');later.type='button';later.className='button secondary';later.textContent='先保留草稿，稍后连接';
+      later.addEventListener('click',()=>{canceled=true;modal.close();modal.remove();reject(Object.assign(new Error('已保留未同步草稿，可下载草稿或稍后重新连接。'),{status:401}));});
+      submit.after(later);
+    }
     modal.querySelector('.cloud-login-foot').textContent='工作内容不写入浏览器存储。仅在选择“记住此设备”时保存加密连接凭据。';
     const install = document.createElement('button');
     install.type='button';install.className='text-button cloud-install-entry';install.dataset.installApp='';install.setAttribute('aria-haspopup','dialog');install.textContent='安装到手机 · 查看步骤';
@@ -136,7 +142,7 @@ function promptLogin({saved=null,notice=''} = {}) {
     form.elements.repository.value = saved?saved.owner+'/'+saved.repo:cloudConfig.owner && cloudConfig.repo ? cloudConfig.owner+'/'+cloudConfig.repo : '';
     form.elements.remember.checked = remembered || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
     error.textContent=notice;
-    const finish=(workspace,value)=>{credentials=value;connection=workspace;deviceMessage='';form.reset();modal.close();modal.remove();resolve(workspace);};
+    const finish=(workspace,value)=>{if(canceled)return;credentials=value;connection=workspace;deviceMessage='';form.reset();modal.close();modal.remove();resolve(workspace);};
     retry.addEventListener('click',async()=>{
       if(!saved)return;retry.disabled=button.disabled=true;error.textContent='';
       try {const workspace=await connect(saved);finish(workspace,saved);}
@@ -151,6 +157,7 @@ function promptLogin({saved=null,notice=''} = {}) {
       try {
         if (extra.length) throw new Error('请填写“用户名/仓库名”');
         const workspace = await connect(next);
+        if(canceled)return;
         if(form.elements.remember.checked){await deviceSession.save(next);remembered=true;}
         else if(remembered){await deviceSession.clear();remembered=false;}
         finish(workspace,next);
@@ -160,7 +167,12 @@ function promptLogin({saved=null,notice=''} = {}) {
   });
 }
 
-export async function githubSession() {
+export async function githubSession({forceLogin=false} = {}) {
+  if(forceLogin){
+    if(connecting)return connecting;
+    connection=credentials=undefined;
+    connecting=promptLogin().finally(()=>{connecting=undefined;});return connecting;
+  }
   if (connection) return connection;
   if (!connecting) connecting=(async()=>{
     let saved,notice='';
@@ -174,3 +186,4 @@ export async function githubSession() {
   })().finally(()=>{connecting=undefined;});
   return connecting;
 }
+export const reconnectGithubSession=()=>githubSession({forceLogin:true});

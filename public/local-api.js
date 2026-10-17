@@ -1,4 +1,4 @@
-import { cloudMode, githubSession, rememberReaderState, readerPreview } from './cloud-session.js?v=sync-20261018';
+import { cloudMode, githubSession, rememberReaderState, readerPreview } from './cloud-session.js?v=sync2-20261018';
 export { cloudMode };
 export { readerPreview };
 export { rememberReaderState };

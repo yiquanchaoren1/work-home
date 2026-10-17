@@ -1,6 +1,6 @@
 import { entryKinds,entryStates,journalFields,personalData,dayKey,buildPersonalDocument } from './personal.js';
 import { createId } from './store.js?v=themes-20261017';
-import { readPersonalDocument, attachmentUrl } from './local-api.js?v=sync-20261018';
+import { readPersonalDocument, attachmentUrl } from './local-api.js?v=sync2-20261018';
 import { markdownExcerpt } from './markdown.js';
 import { renderArchiveTimeline } from './studio-archives.js';
 
