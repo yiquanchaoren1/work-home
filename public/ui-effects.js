@@ -1,5 +1,5 @@
 // Small, local effects. No remote fonts, animation runtime or browser storage.
-import {installPointerEffects} from './pointer-effects.js';
+import {installPointerEffects} from './pointer-effects.js?v=trail-20261017';
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const counters=new Map();
 

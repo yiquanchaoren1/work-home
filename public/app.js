@@ -5,7 +5,7 @@ import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWor
 import { createPersonalUI } from './personal-ui.js?v=studio-20261017';
 import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
-import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=pointer-20261017';
+import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=trail-20261017';
 import { installAppPanel } from './install-app.js';
 import { cloudConnectionPanel,refreshConnectionPanel } from './cloud-session.js';
 import { renderStudioDashboard } from './studio-dashboard.js';
@@ -160,7 +160,7 @@ function documentUrl(id) { return `./document.html?id=${encodeURIComponent(id)}`
 function noteCard(n) { return `<a class="note-card" href="${documentUrl(n.id)}" target="_blank" rel="noopener noreferrer" aria-label="打开文档：${esc(n.title)}（新标签页）"><div class="card-top"><span class="topic-icon">${icon(n.category==='公共组件'?'code':'book')}</span><span class="badge gray">${esc(n.category)}</span></div><h3>${esc(n.title)}</h3><p class="card-description">${esc(n.attachment?(n.body || n.attachment.name):n.format==='markdown'?markdownExcerpt(n.body):n.body.slice(0,105))}</p><div class="card-footer">${tags(n.tags.slice(0,2))}<span class="muted">${n.attachment?esc(n.attachment.name.split('.').pop().toUpperCase())+' · ':n.format==='markdown'?'MD · ':''}${date(n.updatedAt)}</span>${icon('external')}</div></a>`; }
 function activities(limit=30) { return data.activity.length?`<div class="activity-list">${data.activity.slice(0,limit).map(a=>`<div class="activity-item"><span class="activity-dot"></span><div class="activity-content"><p>${esc(a.text)}</p><time>${date(a.at)} · ${new Date(a.at).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit'})}</time></div></div>`).join('')}</div>`:empty('每一步，都会留下记录','添加事项、收集链接后，你的工作足迹会出现在这里。'); }
 function workspaceVisual() {
-  return `<div class="workspace-orbit" aria-hidden="true"><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><div class="orbit-path"></div><div class="orbit-core"><span class="core-glyph">间</span><span>WORKSPACE</span></div><div class="orbit-node node-tasks">${icon('task')}<span>工作事项<strong>${data.tasks.length}</strong></span></div><div class="orbit-node node-notes">${icon('book')}<span>知识文档<strong>${data.notes.length}</strong></span></div><div class="orbit-node node-links">${icon('link')}<span>常用链接<strong>${data.links.length}</strong></span></div><div class="orbit-caption"><span class="status-dot"></span>灵感、行动与知识，在这里连接</div></div>`;
+  return `<div class="workspace-orbit" aria-hidden="true"><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><div class="orbit-path"></div><div class="orbit-core"><span class="core-glyph">B</span><span>WORKSPACE</span></div><div class="orbit-node node-tasks">${icon('task')}<span>工作事项<strong>${data.tasks.length}</strong></span></div><div class="orbit-node node-notes">${icon('book')}<span>知识文档<strong>${data.notes.length}</strong></span></div><div class="orbit-node node-links">${icon('link')}<span>常用链接<strong>${data.links.length}</strong></span></div><div class="orbit-caption"><span class="status-dot"></span>灵感、行动与知识，在这里连接</div></div>`;
 }
 function dashboard() {
   return renderStudioDashboard({data,esc,icon,fullDate,dayKey,markdownExcerpt,taskCard,empty,noteCard,activities,addButton,importButton,pageHeader,sorted,workspaceVisual});
