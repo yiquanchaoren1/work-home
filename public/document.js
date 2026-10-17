@@ -1,7 +1,7 @@
 import { renderMarkdown } from './markdown.js';
 import { readWorkspace, attachmentUrl, cloudMode } from './local-api.js';
 import { mountPdf } from './pdf-viewer.js';
-import { applyTheme } from './ui-effects.js';
+import { applyTheme } from './ui-effects.js?v=gallery-20261017';
 
 const root = document.querySelector('#reader');
 const downloadButton = document.querySelector('#document-download');

@@ -40,7 +40,7 @@ try {
     await page.setViewportSize({width:390,height:844});await go('dashboard');await page.getByRole('button',{name:'打开导航',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.sidebar').getBoundingClientRect().left>=-1);await page.locator('#navigation a[href="#archives"]').click();await page.getByRole('heading',{name:'工作档案',exact:true}).waitFor();assert.equal(await page.locator('body.menu-open').count(),0);
   });
   await check('reduced-motion disables decorative movement and all original work data survives view interactions',async()=>{
-    await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'reduce'});await go('dashboard');assert.equal(await page.locator('.ring-two').evaluate(el=>getComputedStyle(el).animationName),'none');const current=(await state()).data;const withoutTheme=structuredClone(current);delete withoutTheme.settings.theme;assert.deepEqual(withoutTheme,data);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+    await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'reduce'});await go('dashboard');assert.equal(await page.locator('.gallery-art').evaluate(el=>getComputedStyle(el).transform),'none');assert.equal(await page.locator('.porcelain-vessel').count(),1);const current=(await state()).data;const withoutTheme=structuredClone(current);delete withoutTheme.settings.theme;assert.deepEqual(withoutTheme,data);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
   });
   console.log(`UI refresh E2E complete: ${passed} groups passed; isolated data only.`);
 } finally {

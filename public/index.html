@@ -1,34 +1,35 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-design="porcelain">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#176453">
+  <meta name="theme-color" content="#f8f9f5">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Bing‘ House">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="description" content="把工作事项、常用链接、知识笔记与验证记录整理在一起。你的个人研发工作台。">
+  <meta name="description" content="工作事项、文档与每日记录。Bing‘ House，瓷白与墨色的私人案头。">
   <title>Bing‘ House · 我的研发工作台</title>
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="./favicon.svg?v=gallery-20261017" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" sizes="180x180">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=gallery-20261017" sizes="180x180">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./ui-refresh.css">
   <link rel="stylesheet" href="./install-app.css">
   <link rel="stylesheet" href="./automatic-archives.css">
   <link rel="stylesheet" href="./studio.css?v=bing-house-20261017">
   <link rel="stylesheet" href="./pointer-effects.css?v=trail-20261017">
-  <script type="module" src="./app.js?v=trail-20261017"></script>
+  <link rel="stylesheet" href="./gallery.css?v=gallery-20261017">
+  <script type="module" src="./app.js?v=gallery-20261017"></script>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar" aria-label="主导航">
-      <a class="brand" href="#dashboard"><span class="brand-mark">B</span><span><span class="brand-title">Bing‘ House<span class="brand-caption">WORKSPACE / PERSONAL</span></span></span></a>
-      <div class="nav-label">我的空间 <span class="nav-label-line"></span></div>
+      <a class="brand" href="#dashboard"><span class="brand-mark">间</span><span><span class="brand-title">Bing‘ House<span class="brand-caption">私人案头</span></span></span></a>
+      <div class="nav-label">目　录 <span class="nav-label-line"></span></div>
       <nav class="nav-list" id="navigation"></nav>
       <div class="sidebar-bottom">
-        <div class="sidebar-tip"><span class="eyebrow">留一点空间给思考</span><p>把资料收好，<br>让每次开始都更轻松。</p></div>
+        <div class="sidebar-tip"><span class="eyebrow">留一处白</span><p>放未尽之意。</p></div>
         <button class="storage-state" data-action="settings"><span class="status-dot"></span><span>数据保存在本机文件夹</span><span aria-hidden="true">↗</span></button>
         <div class="profile"><span class="avatar">我</span><div><strong id="workspace-name">我的工作台</strong><small>个人研发空间</small></div></div>
       </div>
@@ -37,7 +38,7 @@
     <div class="main-shell">
       <header class="topbar"><div class="breadcrumb"><button class="icon-button mobile-menu" data-action="menu" aria-label="打开导航">☰</button><button class="icon-button sidebar-toggle" data-action="sidebar-toggle" aria-label="收起侧栏" aria-expanded="true" title="收起侧栏"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button><span>个人空间</span><span class="breadcrumb-divider">/</span><strong id="breadcrumb-title">工作台</strong></div><div class="topbar-actions"><button class="search-box" data-action="search" aria-label="搜索全部内容"><span aria-hidden="true">⌕</span><span>搜索或跳转…</span><kbd class="shortcut">Ctrl K</kbd></button><button class="icon-button theme-toggle" data-action="theme-toggle" aria-label="切换到深色主题" aria-pressed="false" title="切换到深色主题">☾</button><button class="icon-button" data-action="settings" aria-label="数据与设置" title="数据与设置">⚙</button></div></header>
       <main id="content" tabindex="-1"></main>
-      <footer class="page-footer"><span>Bing‘ House · 每一份积累，都有去处。</span><button class="text-button" data-action="settings">数据备份与设置</button></footer>
+      <footer class="page-footer"><span>Bing‘ House · 以墨记事，留白予思。</span><button class="text-button" data-action="settings">数据备份与设置</button></footer>
     </div>
   </div>
   <dialog class="modal" id="modal" aria-labelledby="modal-title"></dialog>

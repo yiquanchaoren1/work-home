@@ -56,7 +56,7 @@ try {
     sourceFailure=true;await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('部分档案暂未更新',{exact:true}).waitFor();await page.getByText('前一天归档已自动更新。',{exact:true}).waitFor();
     sourceFailure=false;await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.locator('.archive-auto-state').getByText('自动更新',{exact:true}).waitFor();
     await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'artifacts/archives-auto-desktop.png',fullPage:true});
-    await page.evaluate(()=>location.hash='records');await page.getByRole('heading',{name:'今天，从这里开始。',exact:true}).waitFor();assert.equal(await page.locator('a[href="#records"],[data-collection="records"]').count(),0);assert.equal(await page.locator('.stat-card[href="#archives"]').count(),1);
+    await page.evaluate(()=>location.hash='records');await page.getByRole('heading',{name:'Bing‘ House',exact:true}).waitFor();assert.equal(await page.locator('a[href="#records"],[data-collection="records"]').count(),0);assert.equal(await page.locator('.stat-card[href="#archives"]').count(),1);
     await page.getByRole('button',{name:'搜索全部内容',exact:true}).click();await page.locator('#global-search').fill('旧验证记录独特检索词');assert.equal(await page.locator('.search-result').count(),0);await page.keyboard.press('Escape');
     for(const width of [320,390]){await page.setViewportSize({width,height:844});await page.evaluate(()=>location.hash='archives');await page.getByRole('heading',{name:'工作档案',exact:true}).waitFor();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
     assert.deepEqual(files.get('workspace.json').bytes,original);assert.equal(writes,0);assert.deepEqual(errors,[]);
