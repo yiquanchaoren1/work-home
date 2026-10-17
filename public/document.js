@@ -84,7 +84,7 @@ async function render(note, state, ticket) {
   else content.append(element('div','reader-plain',note.body||'暂无正文'));
   if(note.tags.length){const tags=element('div','reader-tags');for(const tag of note.tags)tags.append(element('span','tag',tag));paper.append(tags);}
   cleanupPreview?.();cleanupPreview=nextCleanup;
-  currentNote=note;document.title=`${note.title} · 工作间`;
+  currentNote=note;document.title=`${note.title} · Bing‘ House`;
   editLink.href=`./#notes/edit/${encodeURIComponent(note.id)}`;editLink.textContent=note.attachment?'编辑说明':'编辑文档';editLink.hidden=false;
   downloadButton.textContent=note.attachment?'下载原文件':note.format==='markdown'?'下载 .md':'下载 .txt';downloadButton.hidden=false;
   root.replaceChildren(paper);

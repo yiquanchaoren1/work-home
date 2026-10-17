@@ -7,7 +7,7 @@
 }
 body { background:radial-gradient(ellipse at 95% 0,#e1ecd677,transparent 42%),var(--bg); }
 .sidebar { width:232px;padding:30px 16px 22px;background:radial-gradient(ellipse at 0 0,#30513a88,transparent 50%),#132d24;border-color:#294438; }
-.brand { padding:0 12px 37px; }.brand-title { font-size:20px;letter-spacing:2px; }.brand-caption { font-size:8px;letter-spacing:1.2px; }
+.brand { padding:0 12px 37px; }.brand-title { font-size:18px;letter-spacing:.2px;white-space:nowrap; }.brand-caption { font-size:8px;letter-spacing:1.2px; }
 .brand-mark { border-radius:15px;background:linear-gradient(140deg,#e0fbb4,#b9e783);box-shadow:0 5px 20px #c4ee8e16; }
 .nav-label { font-size:10px;margin-bottom:15px; }.nav-item { min-height:49px;font-size:13px;border-radius:12px;gap:12px; }.nav-list { gap:7px; }
 .nav-item.active { background:#caef9e16;border-color:#d6f2bc21; }.nav-item.active::before { left:-16px;background:var(--accent);box-shadow:0 0 12px #d2f69555; }

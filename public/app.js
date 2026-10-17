@@ -69,11 +69,11 @@ function offerUndo(message,mutate,announcement) {
   setTimeout(()=>{el.remove();if(undoAction?.key===key)undoAction=null;},9000);
 }
 function acceptState(state) {
-  if(!state.features?.includes('personal-archive-v1'))throw new Error('请重新启动本机工作间服务以加载个人档案功能，当前版本不能保存新档案。');
-  if(!state.features.includes('task-links-v1'))throw new Error('请重新启动本机工作间服务以加载事项链接关联功能。');
-  if(!state.features.includes('daily-archive-v2'))throw new Error('请重新启动本机工作间服务以加载每日摘要功能。');
-  if(!state.features.includes('archive-documents-v1'))throw new Error('请重新启动本机工作间服务以加载历史总结和个人档案文档。');
-  if(!state.features.includes('ui-refresh-v1'))throw new Error('请重新启动本机工作间服务以加载新版界面。');
+  if(!state.features?.includes('personal-archive-v1'))throw new Error('请重新启动本机Bing‘ House服务以加载个人档案功能，当前版本不能保存新档案。');
+  if(!state.features.includes('task-links-v1'))throw new Error('请重新启动本机Bing‘ House服务以加载事项链接关联功能。');
+  if(!state.features.includes('daily-archive-v2'))throw new Error('请重新启动本机Bing‘ House服务以加载每日摘要功能。');
+  if(!state.features.includes('archive-documents-v1'))throw new Error('请重新启动本机Bing‘ House服务以加载历史总结和个人档案文档。');
+  if(!state.features.includes('ui-refresh-v1'))throw new Error('请重新启动本机Bing‘ House服务以加载新版界面。');
   codexDir=state.codexDir||codexDir;codexWorkspace=state.codexWorkspace||codexWorkspace;
   masterPath=state.masterPath||masterPath;
   archiveStatus=state.archiveSync || archiveStatus;
@@ -136,7 +136,7 @@ const addButton = (collection,label) => `<button class="button primary" data-act
 const importButton = () => `<button class="button secondary" data-action="import">${icon('upload')}导入链接</button>`;
 function menu() {
   const p = route().page === 'detail' ? 'tasks' : ['profile','journal','portable'].includes(route().page)?'archives':route().page;
-  $('#navigation').innerHTML = [['dashboard','grid'],['tasks','task'],['links','link'],['notes','book'],['activity','clock'],['archives','folder']].map(([key,ico])=>`<a href="#${key}" class="nav-item ${p===key?'active':''}" title="${labels[key]}" aria-label="${labels[key]}" ${p===key?'aria-current="page"':''}>${icon(ico)}<span>${labels[key]}</span>${data[key]?`<span class="nav-count">${data[key].length}</span>`:''}</a>`).join('');
+  $('#navigation').innerHTML = [['dashboard','grid'],['tasks','task'],['links','link'],['notes','book'],['activity','clock'],['archives','folder']].map(([key,ico])=>`<a href="#${key}" class="nav-item ${p===key?'active':''}" title="${labels[key]}" aria-label="${labels[key]}" ${p===key?'aria-current="page"':''}>${icon(ico)}<span>${labels[key]}</span>${key!=='activity'&&data[key]?`<span class="nav-count">${data[key].length}</span>`:''}</a>`).join('');
   $('#breadcrumb-title').textContent = labels[route().page] || '工作台';
   $('#workspace-name').textContent = data.settings.name;
   const mobilePage=p==='links'?'notes':p==='activity'?'dashboard':p;
@@ -181,7 +181,7 @@ function detail(id) {
 }
 function settings() {
   return pageHeader('YOUR SPACE, YOUR DATA','数据与设置','所有资料保存在本机文件夹。换浏览器、清除网站数据不会删除已保存的资料。',`<button class="button secondary" data-action="reload-data">${icon('folder')}重新载入</button>`)+installAppPanel()+cloudConnectionPanel()+
-    `<div class="settings-grid"><section class="panel backup-panel"><h2>工作台名称</h2><form id="settings-form"><label class="field">空间名称<input name="name" required maxlength="50" value="${esc(data.settings.name)}"></label><button class="button primary" type="submit">保存名称</button></form></section><section class="panel backup-panel"><h2>导出备份</h2><p>包含全部事项、链接、文档原文件、工作档案和设置。下载的 JSON 文件可在这里恢复。</p><button class="button primary" data-action="export">${icon('download')}下载完整备份</button><p class="hint">${data.tasks.length} 个事项 · ${data.links.length} 个链接 · ${data.notes.length} 篇文档</p></section><section class="panel backup-panel"><h2>恢复或合并数据</h2><p>选择工作间导出的 JSON 文件，预览后决定合并或替换。合并保留现有内容；替换前会自动保存本机恢复副本。</p><label class="field">备份文件<input id="backup-file" type="file" accept=".json,application/json"></label><div id="restore-preview"></div></section><section class="panel backup-panel"><h2>本机数据位置</h2><div class="prose">${esc(dataDir || '等待本机服务连接……')}
+    `<div class="settings-grid"><section class="panel backup-panel"><h2>工作台名称</h2><form id="settings-form"><label class="field">空间名称<input name="name" required maxlength="50" value="${esc(data.settings.name)}"></label><button class="button primary" type="submit">保存名称</button></form></section><section class="panel backup-panel"><h2>导出备份</h2><p>包含全部事项、链接、文档原文件、工作档案和设置。下载的 JSON 文件可在这里恢复。</p><button class="button primary" data-action="export">${icon('download')}下载完整备份</button><p class="hint">${data.tasks.length} 个事项 · ${data.links.length} 个链接 · ${data.notes.length} 篇文档</p></section><section class="panel backup-panel"><h2>恢复或合并数据</h2><p>选择Bing‘ House导出的 JSON 文件，预览后决定合并或替换。合并保留现有内容；替换前会自动保存本机恢复副本。</p><label class="field">备份文件<input id="backup-file" type="file" accept=".json,application/json"></label><div id="restore-preview"></div></section><section class="panel backup-panel"><h2>本机数据位置</h2><div class="prose">${esc(dataDir || '等待本机服务连接……')}
 
 工作内容、文档和图片写入此文件夹，不写入浏览器存储。请保留此文件夹；完整备份也包含上传的原文件。
 
@@ -338,7 +338,7 @@ async function confirmImport() {
   modal.close(); location.hash='links'; toast(`已导入 ${count} 个链接`);
 }
 function download(filename,text,type='application/json') { const url=URL.createObjectURL(new Blob([text],{type})); const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000); }
-async function exportData() { const backup=await withBusy(()=>readBackup());download(`工作间备份-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(backup,null,2));toast('包含原文件的完整备份已开始下载'); }
+async function exportData() { const backup=await withBusy(()=>readBackup());download(`Bing‘ House备份-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(backup,null,2));toast('包含原文件的完整备份已开始下载'); }
 async function restoreBackup(mode) {
   if(!restoreCandidate)throw new Error('请先选择有效备份');
   acceptState(await withBusy(()=>restoreWorkspace(restoreCandidate,mode,revision)));
@@ -450,7 +450,7 @@ document.addEventListener('click',async event=>{
     if(action==='preview-import')previewImport();
     if(action==='confirm-import')await confirmImport();
     if(action==='export')await exportData();
-    if(action==='raw-export'){download('工作间旧浏览器数据.json',localStorage.getItem(STORAGE_KEY)||'','application/json');}
+    if(action==='raw-export'){download('Bing‘ House旧浏览器数据.json',localStorage.getItem(STORAGE_KEY)||'','application/json');}
     if(action==='delete')askDelete(collection,id);
     if(action==='confirm-delete'){await commit(next=>{next[collection]=next[collection].filter(x=>x.id!==id);if(collection==='links')removeTaskLink(next,id);if(collection==='tasks')for(const k of ['links','notes','records'])for(const x of next[k])if(x.taskId===id)x.taskId='';},`删除了一个${kinds[collection]}`);modal.close();if(route().page==='detail'&&collection==='tasks')location.hash='tasks';toast('已删除');}
     if(action==='search-open'){if(collection==='tasks'){modal.close();location.hash=`detail/${encodeURIComponent(id)}`;}else if(collection==='links'){const l=data.links.find(x=>x.id===id);window.open(l.url,'_blank','noopener,noreferrer');}else viewItem(collection,id);}

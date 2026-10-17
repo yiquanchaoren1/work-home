@@ -15,7 +15,7 @@ async function load() {
     const state=await readWorkspace(),summary=archive?state.data.archiveDocuments?.find(item=>item.id===archive):state.data.dailyArchives?.find(item=>item.date===date);
     applyTheme(state.data.settings.theme);
     if(!summary)throw new Error('此文档尚未归档，上传完成后会自动显示，请稍后重新查看。');
-    current=summary;document.title=summary.title+' · 工作间';
+    current=summary;document.title=summary.title+' · Bing‘ House';
     const paper=element('article','reader-paper');
     const filename=archive?archiveDocumentKinds[archive].filename:summary.date+'.md';
     const label=archive?summary.title:summary.date;

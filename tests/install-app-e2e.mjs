@@ -52,7 +52,7 @@ try {
     await prompt('dismissed');await open();await page.locator('[data-native-install]').click();await page.getByText('暂未安装。你仍可按浏览器菜单步骤添加到桌面。',{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.promptCalls),1);assert.equal(await page.evaluate(()=>window.promptHadGesture),true);assert.equal(await page.locator('[data-native-install]').isVisible(),false);
     await prompt('accepted');await page.locator('[data-native-install]').click();await page.getByText('已确认安装，等待浏览器完成。完成后可从桌面打开。',{exact:true}).waitFor();
-    await page.evaluate(()=>window.dispatchEvent(new Event('appinstalled')));await page.getByText('已安装。下次可以从桌面打开工作间。',{exact:true}).waitFor();assert.equal(await page.locator('[data-native-install]').isVisible(),false);
+    await page.evaluate(()=>window.dispatchEvent(new Event('appinstalled')));await page.getByText('已安装。下次可以从桌面打开Bing‘ House。',{exact:true}).waitFor();assert.equal(await page.locator('[data-native-install]').isVisible(),false);
     await page.getByRole('button',{name:'关闭安装说明',exact:true}).click();
   });
   await check('phone and landscape layouts fit, and installation does not persist private data or register caches',async()=>{

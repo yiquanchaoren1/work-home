@@ -11,7 +11,7 @@ const preferredPlatform = appleMobile ? 'ios' : /Android/.test(navigator.userAge
 const icon = new URL('./icons/app-192.png',import.meta.url).href;
 
 export function installAppPanel() {
-  return `<section class="panel install-panel"><img src="${icon}" alt="" width="54" height="54"><div><div class="eyebrow">ALWAYS WITH YOU</div><h2>把工作间放进口袋</h2><p class="hint">添加桌面图标，以独立窗口打开。同一份资料，随时继续。</p></div><button class="button secondary" type="button" data-install-app aria-haspopup="dialog">安装到手机</button></section>`;
+  return `<section class="panel install-panel"><img src="${icon}" alt="" width="54" height="54"><div><div class="eyebrow">ALWAYS WITH YOU</div><h2>把Bing‘ House放进口袋</h2><p class="hint">添加桌面图标，以独立窗口打开。同一份资料，随时继续。</p></div><button class="button secondary" type="button" data-install-app aria-haspopup="dialog">安装到手机</button></section>`;
 }
 
 function updateDialog(message = '') {
@@ -20,7 +20,7 @@ function updateDialog(message = '') {
   const alreadyInstalled = installed();
   dialog.querySelector('[data-native-install]').hidden = alreadyInstalled || !deferredPrompt;
   dialog.querySelector('[data-native-install]').disabled = installing;
-  dialog.querySelector('[data-install-status]').textContent = message || (standalone() ? '当前已在 App 窗口中打开，可以直接使用。' : alreadyInstalled ? '已安装。下次可以从桌面打开工作间。' : embeddedBrowser ? '请先用系统浏览器打开工作间，再按下面步骤添加到桌面。' : deferredPrompt ? '当前浏览器已准备好安装，点击下方按钮确认。' : '按下面的浏览器步骤添加。若没有安装选项，请使用 Safari、Chrome 或 Edge。');
+  dialog.querySelector('[data-install-status]').textContent = message || (standalone() ? '当前已在 App 窗口中打开，可以直接使用。' : alreadyInstalled ? '已安装。下次可以从桌面打开Bing‘ House。' : embeddedBrowser ? '请先用系统浏览器打开Bing‘ House，再按下面步骤添加到桌面。' : deferredPrompt ? '当前浏览器已准备好安装，点击下方按钮确认。' : '按下面的浏览器步骤添加。若没有安装选项，请使用 Safari、Chrome 或 Edge。');
 }
 
 function choosePlatform(platform) {
@@ -37,7 +37,7 @@ function openInstallGuide() {
     dialog.id = 'install-app-dialog';
     dialog.className = 'modal install-dialog';
     dialog.setAttribute('aria-labelledby','install-app-title');
-    dialog.innerHTML = `<div class="install-cover"><button class="icon-button install-close" type="button" data-close-install aria-label="关闭安装说明">×</button><img src="${icon}" alt="工作间图标" width="72" height="72"><div class="eyebrow">YOUR WORK, WITH YOU</div><h2 id="install-app-title">工作间，随身打开</h2><p>桌面一点，就回到你的工作空间。</p><div class="install-features"><span>专属图标</span><span>独立窗口</span><span>资料同步</span></div></div><div class="install-body"><p class="install-status" data-install-status role="status"></p><button class="button primary native-install" type="button" data-native-install hidden>安装工作间</button><div class="install-platform-tabs" role="group" aria-label="选择安装设备"><button type="button" data-install-platform="android">安卓手机</button><button type="button" data-install-platform="ios">iPhone / iPad</button><button type="button" data-install-platform="desktop">电脑</button></div><ol class="install-steps" data-install-steps="android"><li>在 <strong>Chrome 或 Edge</strong> 中打开工作间。</li><li>点浏览器菜单 <strong>⋮</strong>，选择<strong>安装应用</strong>或<strong>添加到主屏幕</strong>，按提示确认。</li><li>回到手机桌面，点<strong>工作间</strong>图标打开。</li></ol><ol class="install-steps" data-install-steps="ios" hidden><li>在 <strong>Safari</strong> 中打开工作间。</li><li>点<strong>分享</strong>（方框向上箭头），选择<strong>添加到主屏幕</strong>。</li><li>如有<strong>作为网页 App 打开</strong>选项，请开启，再点<strong>添加</strong>。</li></ol><ol class="install-steps" data-install-steps="desktop" hidden><li>在 <strong>Chrome 或 Edge</strong> 中打开工作间。</li><li>点地址栏的安装图标，或从浏览器菜单选择<strong>安装工作间</strong> / <strong>将此站点作为应用安装</strong>。</li><li>按提示确认，之后从桌面或开始菜单打开。</li></ol><div class="install-note"><strong>你的资料仍在原来的位置</strong><p>安装不会复制或清空资料。云端版继续使用私有仓库，需要联网；重新打开或刷新后可能需要再次输入访问密钥。</p></div></div>`;
+    dialog.innerHTML = `<div class="install-cover"><button class="icon-button install-close" type="button" data-close-install aria-label="关闭安装说明">×</button><img src="${icon}" alt="Bing‘ House图标" width="72" height="72"><div class="eyebrow">YOUR WORK, WITH YOU</div><h2 id="install-app-title">Bing‘ House，随身打开</h2><p>桌面一点，就回到你的工作空间。</p><div class="install-features"><span>专属图标</span><span>独立窗口</span><span>资料同步</span></div></div><div class="install-body"><p class="install-status" data-install-status role="status"></p><button class="button primary native-install" type="button" data-native-install hidden>安装Bing‘ House</button><div class="install-platform-tabs" role="group" aria-label="选择安装设备"><button type="button" data-install-platform="android">安卓手机</button><button type="button" data-install-platform="ios">iPhone / iPad</button><button type="button" data-install-platform="desktop">电脑</button></div><ol class="install-steps" data-install-steps="android"><li>在 <strong>Chrome 或 Edge</strong> 中打开Bing‘ House。</li><li>点浏览器菜单 <strong>⋮</strong>，选择<strong>安装应用</strong>或<strong>添加到主屏幕</strong>，按提示确认。</li><li>回到手机桌面，点<strong>Bing‘ House</strong>图标打开。</li></ol><ol class="install-steps" data-install-steps="ios" hidden><li>在 <strong>Safari</strong> 中打开Bing‘ House。</li><li>点<strong>分享</strong>（方框向上箭头），选择<strong>添加到主屏幕</strong>。</li><li>如有<strong>作为网页 App 打开</strong>选项，请开启，再点<strong>添加</strong>。</li></ol><ol class="install-steps" data-install-steps="desktop" hidden><li>在 <strong>Chrome 或 Edge</strong> 中打开Bing‘ House。</li><li>点地址栏的安装图标，或从浏览器菜单选择<strong>安装Bing‘ House</strong> / <strong>将此站点作为应用安装</strong>。</li><li>按提示确认，之后从桌面或开始菜单打开。</li></ol><div class="install-note"><strong>你的资料仍在原来的位置</strong><p>安装不会复制或清空资料。云端版继续使用私有仓库，需要联网；重新打开或刷新后可能需要再次输入访问密钥。</p></div></div>`;
     dialog.querySelector('.install-note p').textContent='安装不会复制或清空资料。云端版仍需联网。首次连接时勾选“记住此设备”，之后打开可自动连接；密钥到期或被撤销后需更新。';
     document.body.append(dialog);
   }
@@ -54,7 +54,7 @@ window.addEventListener('beforeinstallprompt',event => {
 window.addEventListener('appinstalled',() => {
   installedThisSession = true;
   deferredPrompt = null;
-  updateDialog('已安装。下次可以从桌面打开工作间。');
+  updateDialog('已安装。下次可以从桌面打开Bing‘ House。');
 });
 displayMode.addEventListener?.('change',() => updateDialog());
 
