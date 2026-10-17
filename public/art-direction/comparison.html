@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN" data-direction="paper">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3efe6">
+  <meta name="description" content="Bing‘ House 的艺术方向预览。仅含示例内容。">
+  <title>Bing‘ House · 旧稿对照</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./house.css">
+  <script type="module" src="./house.js"></script>
+</head>
+<body>
+  <div class="preview-bar">
+    <span class="preview-label"><i></i> 视觉提案 <span class="preview-note">／ 内容均为示例</span></span>
+    <div class="directions" role="group" aria-label="切换艺术方向">
+      <button data-direction="paper" aria-pressed="true"><span>A</span> 私人刊物</button>
+      <button data-direction="experimental" aria-pressed="false"><span>B</span> 实验工作室</button>
+      <button data-direction="gallery" aria-pressed="false"><span>C</span> 安静画廊</button>
+    </div>
+    <a class="back-link" href="./">查看水墨新稿 ↗</a>
+  </div>
+
+  <aside class="index-rail" aria-label="主导航">
+    <a href="#home" class="rail-brand" aria-label="Bing‘ House 首页">Bing‘<br><em>House.</em><span>一间自己的工作室</span></a>
+    <div class="rail-section">目　录 <span>INDEX</span></div>
+    <nav class="rail-nav">
+      <a href="#home" aria-current="page"><span>01</span> 案头 <i>↗</i></a>
+      <a href="#tasks"><span>02</span> 工作事项 <i>↗</i></a>
+      <a href="#library"><span>03</span> 书架与链接 <i>↗</i></a>
+      <a href="#archives"><span>04</span> 工作档案 <i>↗</i></a>
+      <a href="#activity"><span>05</span> 工作记录 <i>↗</i></a>
+    </nav>
+    <div class="rail-bottom">
+      <svg class="house-sketch" viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="m15 46 35-29 35 29M24 39v45h53V40M43 84V57h17v27M31 47h9v10h-9M66 47h7v10h-7"/><path d="M12 88c24-1 48 2 77-1M49 16l3-5M25 18l4 5M79 24l5-4"/></svg>
+      <span>工作 · 笔记 · 未完成的想法</span>
+      <button class="text-link" data-action="about">关于这间屋子 ↗</button>
+    </div>
+  </aside>
+
+  <div class="house-main">
+    <header class="running-head">
+      <span>独立记录，持续修订。</span>
+      <div><button class="search-trigger" data-action="search">查找一页 <kbd>⌘ / Ctrl K</kbd><span>⌕</span></button><button class="new-entry" data-action="new">记一笔 <span>＋</span></button></div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="colophon"><span>Bing‘ House</span><span>工作与灵感的私人住处。</span><a href="#home">回到案头 ↑</a></footer>
+  </div>
+
+  <dialog id="reader" class="paper-dialog" aria-labelledby="reader-title"><button class="dialog-close" data-action="close" aria-label="关闭阅读">×</button><div id="reader-content"></div></dialog>
+  <dialog id="search" class="search-dialog" aria-labelledby="search-title"><div class="search-head"><h2 id="search-title">找一页。</h2><button class="dialog-close" data-action="close-search" aria-label="关闭查找">×</button></div><label for="search-input">搜索示例事项与文档</label><input id="search-input" autocomplete="off" placeholder="输入一个词，例如：实现"><div id="search-results" aria-live="polite"></div><p class="dialog-note">独立视觉预览，不读取或保存真实工作资料。</p></dialog>
+  <div id="notice" role="status" aria-live="polite"></div>
+</body>
+</html>

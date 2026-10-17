@@ -1,28 +1,25 @@
 <!doctype html>
-<html lang="zh-CN" data-direction="paper">
+<html lang="zh-CN" data-direction="porcelain">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f3efe6">
-  <meta name="description" content="Bing‘ House 的艺术方向预览。仅含示例内容。">
-  <title>Bing‘ House · 私人工作刊物</title>
+  <meta name="theme-color" content="#f8f9f5">
+  <meta name="description" content="Bing‘ House · 瓷白、墨黑与朱红的中国风安静画廊。独立预览，仅含示例内容。">
+  <title>Bing‘ House · 瓷白静室</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./house.css">
-  <script type="module" src="./house.js"></script>
+  <link rel="stylesheet" href="./house.css?v=porcelain-20261017">
+  <link rel="stylesheet" href="./porcelain.css?v=20261017">
+  <script type="module" src="./house.js?v=porcelain-20261017"></script>
 </head>
 <body>
   <div class="preview-bar">
-    <span class="preview-label"><i></i> 视觉提案 <span class="preview-note">／ 内容均为示例</span></span>
-    <div class="directions" role="group" aria-label="切换艺术方向">
-      <button data-direction="paper" aria-pressed="true"><span>A</span> 私人刊物</button>
-      <button data-direction="experimental" aria-pressed="false"><span>B</span> 实验工作室</button>
-      <button data-direction="gallery" aria-pressed="false"><span>C</span> 安静画廊</button>
-    </div>
-    <a class="back-link" href="../">返回现有网站 ↗</a>
+    <span class="preview-label"><i></i> 方案预览 <span class="preview-note">／ 示例内容</span></span>
+    <span class="direction-title">瓷白 · 墨黑 · 朱红</span>
+    <div class="preview-links"><a class="back-link" href="./comparison.html">对照旧稿 ↗</a><a class="back-link" href="../">返回现有网站 ↗</a></div>
   </div>
 
   <aside class="index-rail" aria-label="主导航">
-    <a href="#home" class="rail-brand" aria-label="Bing‘ House 首页">Bing‘<br><em>House.</em><span>一间自己的工作室</span></a>
+    <a href="#home" class="rail-brand" aria-label="Bing‘ House 首页"><span class="house-seal" aria-hidden="true">间</span><span class="rail-wordmark">Bing‘<br><em>House.</em></span><span class="rail-subtitle">一间自己的工作室</span></a>
     <div class="rail-section">目　录 <span>INDEX</span></div>
     <nav class="rail-nav">
       <a href="#home" aria-current="page"><span>01</span> 案头 <i>↗</i></a>
@@ -32,7 +29,7 @@
       <a href="#activity"><span>05</span> 工作记录 <i>↗</i></a>
     </nav>
     <div class="rail-bottom">
-      <svg class="house-sketch" viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="m15 46 35-29 35 29M24 39v45h53V40M43 84V57h17v27M31 47h9v10h-9M66 47h7v10h-7"/><path d="M12 88c24-1 48 2 77-1M49 16l3-5M25 18l4 5M79 24l5-4"/></svg>
+      <span class="margin-poem">留一处白<br>放未尽之意</span>
       <span>工作 · 笔记 · 未完成的想法</span>
       <button class="text-link" data-action="about">关于这间屋子 ↗</button>
     </div>
@@ -40,11 +37,11 @@
 
   <div class="house-main">
     <header class="running-head">
-      <span>独立记录，持续修订。</span>
+      <span>私人案头　／　工作与笔记</span>
       <div><button class="search-trigger" data-action="search">查找一页 <kbd>⌘ / Ctrl K</kbd><span>⌕</span></button><button class="new-entry" data-action="new">记一笔 <span>＋</span></button></div>
     </header>
     <main id="main" tabindex="-1"></main>
-    <footer class="colophon"><span>Bing‘ House</span><span>工作与灵感的私人住处。</span><a href="#home">回到案头 ↑</a></footer>
+    <footer class="colophon"><span>Bing‘ House</span><span>以墨记事，留白予思。</span><a href="#home">回到案头 ↑</a></footer>
   </div>
 
   <dialog id="reader" class="paper-dialog" aria-labelledby="reader-title"><button class="dialog-close" data-action="close" aria-label="关闭阅读">×</button><div id="reader-content"></div></dialog>
