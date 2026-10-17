@@ -1,41 +1,240 @@
-/* B / Experimental studio: flat charcoal, acid yellow, oversized type and cut paper. */
-html[data-design="experimental"]{--bg:#171719;--surface:#202023;--surface-soft:#28282c;--ink:#f2f1e9;--muted:#b0afab;--border:#444447;--primary:#d8ff3e;--primary-hover:#e6ff84;--primary-soft:#303624;--accent:#d8ff3e;--input-bg:#1c1c1f;--spot-color:rgba(216,255,62,.025);--gallery-serif:Arial,"Microsoft YaHei",sans-serif;color-scheme:dark}
-html[data-design="experimental"][data-theme="dark"]{--bg:#101012;--surface:#19191c;--surface-soft:#242427;--border:#414145;--input-bg:#141416}
-html[data-design="experimental"] body{background:var(--bg);color:var(--ink)}
-html[data-design="experimental"] :focus-visible{outline:2px solid var(--primary);outline-offset:4px}
-html[data-design="experimental"] ::selection{background:var(--primary);color:#171719}
-html[data-design="experimental"] .sidebar,html[data-design="experimental"] .topbar{background:var(--bg);border-color:var(--border)}
-.brand{align-items:flex-start;gap:10px;padding-bottom:36px}.brand-mark{width:31px;height:35px;outline:0;border:0;background:var(--primary);color:#171719;font:bold 18px/1 Arial,sans-serif}.brand-title{font-family:Arial,"Microsoft YaHei",sans-serif;font-size:25px;font-weight:800;line-height:1.05;letter-spacing:-1.3px;white-space:normal}.brand-caption{font:8px/1.7 Consolas,monospace;letter-spacing:.2px;margin-top:11px;color:var(--muted)}
-.nav-label{letter-spacing:2px}.nav-item{font-size:13px;min-height:48px}.nav-item.active{color:var(--primary)}.nav-item.active::before{top:15px;bottom:15px;width:3px;left:-12px;background:var(--primary)}.sidebar-tip .eyebrow,.sidebar-tip p{font:11px/2.2 "Microsoft YaHei",sans-serif;letter-spacing:0}.sidebar-tip .eyebrow{color:var(--ink)}.sidebar .avatar{color:var(--primary);border-color:var(--border)}
-html[data-design="experimental"] .button.primary,html[data-design="experimental"] .mobile-create{background:var(--primary);border-color:var(--primary);color:#171719;box-shadow:none;font-weight:700}
-html[data-design="experimental"] .button.primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
-html[data-design="experimental"] .button.secondary,html[data-design="experimental"] .button.small{border-radius:0}.button.secondary:hover{background:var(--surface-soft)}
-html[data-design="experimental"] .button.danger{color:#ffad96;background:#372a26;border-color:#6e4940}.icon-button.is-pinned{background:var(--primary-soft);color:var(--primary)}.button,.filter-chip,.panel,.link-card,.note-card,dialog.modal{border-radius:0}
-.page-header h1{font-family:Arial,"Microsoft YaHei",sans-serif;font-weight:800;font-size:40px;letter-spacing:-1px}.page-description{font-size:13px;max-width:760px}.eyebrow{font-family:Consolas,monospace;font-size:10px;letter-spacing:1px}.panel h2,.section-head h2{font-family:Arial,"Microsoft YaHei",sans-serif;font-weight:700;letter-spacing:-.5px;font-size:22px}.section-head h2 small{font-size:10px;color:var(--muted);letter-spacing:0}.text-button{font-size:12px}.task-title{font-size:17px;font-weight:500}.task-summary{font-size:13px;line-height:1.9}.task-next{border-left-color:var(--primary);font-size:12px}.task-next>span{color:var(--primary)}.task-card-actions .text-button{font-size:12px}.task-status-select{min-height:35px;font-size:12px}.task-card:hover{border-color:var(--primary)}
-html[data-design="experimental"] .task-card[data-status] .task-status-select{background:transparent;color:var(--muted);border-color:var(--border)}
-html[data-design="experimental"] .task-card[data-status="进行中"] .task-status-select{color:var(--primary);border-color:#697c32}
-html[data-design="experimental"] .badge,html[data-design="experimental"] .badge.green,html[data-design="experimental"] .badge.blue{background:var(--surface-soft);color:var(--ink);border-color:var(--border)}
-html[data-design="experimental"] .badge.amber{background:#3b3024;color:#ffd18a;border-color:#67533e}
-.card-title,.note-card h3{font-weight:600}.card-description{font-size:13px}.tag{font-size:11px}.link-icon,.topic-icon{color:var(--primary)}.card-grid>.task-card{border-radius:0}
-.experimental-masthead{align-items:flex-end;margin-bottom:20px;padding-top:10px}.experimental-masthead h1{font:900 clamp(58px,7.5vw,114px)/.98 Arial,sans-serif;text-transform:uppercase;letter-spacing:-7px;white-space:nowrap}.experimental-masthead h1 em{font-style:normal;font-weight:900}.experimental-masthead>div>p{font:10px/1.8 Consolas,monospace;letter-spacing:1.7px;margin-top:15px}.gallery-edition{flex-shrink:0}.gallery-edition>span{color:var(--primary);font:italic 30px/1.2 Georgia,serif;letter-spacing:-1px}.gallery-edition small{font:9px/2.1 Consolas,monospace}.gallery-home-actions{margin:0 0 18px}
-html[data-design="experimental"] .gallery-cover{display:grid;grid-template-columns:1.05fr .95fr;min-height:330px;padding:0;gap:0;border:1px solid var(--border);background:transparent;overflow:hidden;box-shadow:none}
-.gallery-cover .hero-copy{grid-column:2;grid-row:1;padding:32px;align-self:center;display:block;max-width:none}.gallery-overline{font:10px/1.8 Consolas,"Microsoft YaHei",monospace;letter-spacing:1px;color:var(--primary)}.gallery-cover h2{font:700 clamp(24px,2.3vw,35px)/1.7 "Microsoft YaHei",Arial,sans-serif;writing-mode:horizontal-tb;letter-spacing:-.5px;min-height:0;margin:18px 0 12px;color:var(--ink)}.gallery-cover h2 span{font-size:.82em}.gallery-cover p{font-size:12px;line-height:2;color:var(--muted);margin:0;max-width:none;text-align:left}.gallery-continue{font-size:11px;line-height:1.8;max-width:100%;margin-top:24px;color:var(--primary)}
-html[data-design="experimental"] .gallery-cover .hero-visual{grid-column:1;grid-row:1;position:relative;inset:auto;display:flex;align-items:center;align-self:stretch;justify-content:center;min-height:330px;min-width:0;max-width:none;width:auto;margin:0;padding:24px;background:#d8ff3e;border:0;opacity:1;mask-image:none;color:#171719;transform:translate3d(calc(var(--hero-parallax-x,0px)*.2),calc(var(--hero-parallax-y,0px)*.2),0)}
-.experimental-collage{position:relative;--paper:#d8ff3e;--paper-raised:#f2f1e9;--ink:#20211a;--accent:#fb633a;--blue:#a17fd4;--ochre:#fb633a;--line:#62664a;--muted:#42482d;min-width:0;width:100%;margin:0}.experimental-collage svg{width:100%;height:auto;max-height:300px;display:block;overflow:visible}.experimental-collage .cut-paper{transform:rotate(-6deg);transform-origin:280px 180px;transition:transform .45s cubic-bezier(.2,.8,.2,1)}.gallery-cover:hover .experimental-collage .cut-paper{transform:rotate(-2deg)}.experimental-collage .ink-loop{stroke-dasharray:1250;stroke-dashoffset:0;transition:stroke-dashoffset .6s}.gallery-cover:hover .experimental-collage .ink-loop{stroke-dashoffset:30}.gallery-art .art-caption{position:static;display:block;text-align:right;color:#32372b;font:8px/1.7 Consolas,"Microsoft YaHei",monospace;margin-top:9px;letter-spacing:.2px}.gallery-margin{display:none}
-.gallery-ledger{margin-top:0;margin-bottom:30px}.gallery-ledger .stat-card{min-height:76px;padding-block:18px;gap:15px}.gallery-ledger .stat-label{font-size:11px}.gallery-ledger .stat-number{font-family:Arial,sans-serif;font-size:29px;font-weight:700;letter-spacing:-1px}.gallery-ledger .stat-card:hover{transform:none;background:var(--surface-soft)}
-.gallery-desk{grid-template-columns:minmax(0,1.6fr) minmax(250px,.9fr);gap:32px}.gallery-side{border-left:0;padding-left:0;gap:26px}.gallery-focus .task-title{font-size:16px}.gallery-focus .task-next{font-size:12px}.gallery-focus .task-card-actions .text-button{font-size:12px}.gallery-focus .task-list>.task-card{padding-block:21px}
-html[data-design="experimental"] .gallery-journal{padding:23px!important;border:1px solid var(--primary)!important;background:transparent;overflow:hidden}.gallery-journal .eyebrow{font-size:10px;color:var(--primary)}.gallery-note-label{font-size:10px}.gallery-journal .daily-feature-date{color:var(--primary);font:italic 38px/1.2 Georgia,serif;letter-spacing:-1px;margin:20px 0 16px}.gallery-journal h2{font-family:Arial,"Microsoft YaHei",sans-serif;font-size:19px;letter-spacing:0;font-weight:600}.gallery-journal p{font-size:12px;line-height:2.1}.gallery-journal>.text-button{color:var(--primary)}.gallery-shortcuts{padding-top:0!important;border-top:0!important}.gallery-shortcuts h2{font-size:20px}.gallery-shortcuts .link-name{font-size:13px}.gallery-shortcuts .link-domain{font-size:10px}.gallery-shortcuts .quick-link:hover{color:var(--primary)}
-.gallery-shelf{margin-top:32px;padding-top:28px;padding-bottom:30px}.gallery-books{gap:24px}.gallery-books .note-card{padding-left:85px;min-height:120px}.gallery-books .note-card::before{box-sizing:border-box;width:66px;height:99px;background:#d8d3c5;border:1px solid #d8d3c5;border-left:3px solid #aba595;color:#292824;font:24px/1.05 Arial,"Microsoft YaHei",sans-serif;letter-spacing:0;padding:20px 11px}.gallery-books .note-card:nth-child(2)::before{background:#d8ff3e;border-color:#d8ff3e;border-left-color:#a2c32c;color:#171719}.gallery-books .note-card:nth-child(3)::before{background:#a17fd4;border-color:#a17fd4;border-left-color:#795ba4;color:#171719}.gallery-books .note-card h3{font:600 15px/1.7 "Microsoft YaHei",Arial,sans-serif}.gallery-books .card-description{font-size:12px;line-height:1.8}.gallery-books .badge{font-size:10px}.gallery-books .card-footer>.muted{font-size:10px}.gallery-books .note-card:hover{transform:translateY(-3px);background:none}.gallery-activity .activity-content p{font-size:12px}.gallery-activity .activity-content time{font-size:10px}.activity-dot{background:var(--primary)}
-.archive-month h2,.archive-auto-panel h2,.archive-document-card h2{font-family:Arial,"Microsoft YaHei",sans-serif;letter-spacing:-.5px;font-weight:700}.archive-tabs{border-radius:0;background:var(--surface-soft)}.archive-tabs a{border-radius:0}.archive-month-nav button{border-radius:0}.archive-day-stamp{border-radius:0}.archive-day-stamp strong{font-family:Arial,sans-serif;font-weight:700}.archive-day h3{font-family:Arial,"Microsoft YaHei",sans-serif;letter-spacing:0}.archive-document-card,.archive-day{background:var(--surface);border-radius:0}.archive-auto-panel{border-top-color:var(--border);border-bottom-color:var(--border)}
-.cloud-login-mark{background:#d8ff3e!important;color:#171719!important;border:0!important}.cloud-login-mark::before{content:"B/";font:bold 30px/1 Arial,sans-serif}.cloud-login h1{font-family:Arial,"Microsoft YaHei",sans-serif;font-weight:800;letter-spacing:-1px}.cloud-login .eyebrow{color:var(--primary)}.cloud-login p,.cloud-login small{color:var(--muted)}.install-cover{background:var(--surface-soft);color:var(--ink)}.install-cover .eyebrow{color:var(--primary)}.install-platform-tabs button[aria-pressed="true"]{color:var(--primary)}
-.reader-brand{font-family:Arial,"Microsoft YaHei",sans-serif;font-weight:800;letter-spacing:-.5px}.reader-brand .brand-mark{background:var(--primary);color:#171719}.reader-paper{border-radius:0}.reader-paper h1.reader-title{font-family:Arial,"Microsoft YaHei",sans-serif;font-weight:750;letter-spacing:-.5px}.markdown-body h1,.markdown-body h2,.markdown-body h3{font-family:Arial,"Microsoft YaHei",sans-serif;font-weight:650}.reader-content,.reader-plain{line-height:1.95}.markdown-body blockquote{border-color:var(--primary)}
-html[data-design="experimental"] .markdown-body a,html[data-design="experimental"] .gallery-journal .text-button,html[data-design="experimental"] .gallery-journal .eyebrow{color:var(--primary)}
-html[data-design="experimental"] .gallery-journal .daily-feature-date{color:var(--primary)}
-html[data-design="experimental"] .pointer-aura{background:radial-gradient(circle,#d8ff3e08,transparent 67%)}html[data-design="experimental"] .pointer-ring{border-color:#d8ff3e55}html[data-design="experimental"] .pointer-ring::after{background:#d8ff3e}html[data-design="experimental"] .pointer-ring.is-interactive{border-color:#d8ff3e99;background:#d8ff3e0a}html[data-design="experimental"] .pointer-rim{background:radial-gradient(180px circle at var(--spot-x,50%) var(--spot-y,50%),#d8ff3e36,transparent 78%)}html[data-design="experimental"] .pointer-streak{background:linear-gradient(90deg,transparent,#d8ff3e66,#d8ff3eaa);box-shadow:none}html[data-design="experimental"] .pointer-spark{background:#a17fd4c9;box-shadow:none}
-@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){html[data-design="experimental"] body.pointer-style-active{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='34' viewBox='0 0 30 34'%3E%3Cpath d='M4 3v23l6-6 5 10 5-3-5-9h10Z' fill='%23d8ff3e' stroke='%23171719' stroke-width='1.7' stroke-linejoin='round'/%3E%3C/svg%3E") 4 3,auto}html[data-design="experimental"] body.pointer-style-active :where(a,button:not(:disabled),[role="button"]){cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='34' viewBox='0 0 30 34'%3E%3Cpath d='M4 3v23l6-6 5 10 5-3-5-9h10Z' fill='%23a17fd4' stroke='%23171719' stroke-width='1.7' stroke-linejoin='round'/%3E%3C/svg%3E") 4 3,pointer}}
-@media(max-width:1200px){.experimental-masthead h1{font-size:clamp(52px,7.3vw,88px);letter-spacing:-5px}.gallery-edition>span{font-size:25px}.gallery-cover .hero-copy{padding:26px}.gallery-cover h2{font-size:27px}.gallery-desk{gap:26px;grid-template-columns:minmax(0,1.5fr) minmax(230px,.9fr)}.gallery-ledger .stat-card{gap:10px}.gallery-books .note-card{padding-left:76px}.gallery-books .note-card::before{width:59px}.brand-title{font-size:23px}}
-@media(max-width:1000px) and (min-width:761px){.gallery-desk{grid-template-columns:1fr}.gallery-side{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:24px}.experimental-masthead h1{font-size:clamp(45px,6.8vw,64px);letter-spacing:-4px}.gallery-cover .hero-copy{padding:23px}.gallery-cover h2{font-size:24px}.gallery-cover p{font-size:11px}.gallery-cover .hero-visual{padding:15px}.gallery-books .note-card{padding:111px 0 0}.gallery-books .note-card::before{width:66px}}
-@media(max-width:760px){.brand-title{font-size:29px}.brand-caption{font-size:9px}.brand-mark{width:33px;height:38px}.topbar{padding-inline:18px}.page-header h1{font-size:34px}.page-description{font-size:12px}.experimental-masthead{align-items:flex-end;gap:10px;padding-top:3px;margin-bottom:19px}.experimental-masthead h1{font-size:clamp(40px,10vw,68px);letter-spacing:-3px;white-space:normal;max-width:100%;line-height:.98}.experimental-masthead>div>p{font-size:8px;letter-spacing:.7px;margin-top:11px}.gallery-edition{max-width:96px;min-width:76px;text-align:right}.gallery-edition>span{font-size:24px;line-height:1.1}.gallery-edition small{font-size:7px;line-height:1.7;display:block;margin-top:8px}.gallery-home-actions{margin-bottom:18px}.gallery-home-actions .button{min-height:39px;font-size:12px}.gallery-cover .hero-copy{display:block;grid-column:1;grid-row:2;padding:25px 23px}.gallery-overline{font-size:9px}.gallery-cover h2{font-size:29px;margin:15px 0 12px;letter-spacing:-.5px;line-height:1.7;white-space:normal}.gallery-cover p{font-size:12px;text-align:left;max-width:none}.gallery-continue{font-size:11px;margin-top:20px}.gallery-cover .hero-visual{grid-column:1;grid-row:1;min-height:215px;padding:21px 17px}.experimental-collage svg{max-height:240px}.gallery-art .art-caption{font-size:7px;margin-top:4px}.gallery-ledger .stat-card{min-height:78px;padding:13px 7px;gap:9px}.gallery-ledger .stat-label{font-size:9px}.gallery-ledger .stat-number{font-size:25px}.gallery-desk{display:block}.gallery-focus .section-head h2{font-size:23px}.gallery-focus .task-title{font-size:16px}.gallery-focus .task-next{font-size:12px}.gallery-focus .task-list>.task-card{padding:22px 0}.gallery-side{display:block;border-top:0;margin-top:28px;padding-top:0}.gallery-shortcuts{margin-top:27px;padding:24px 0 0!important;border-left:0!important;border-top:1px solid var(--border)!important}.gallery-journal .daily-feature-date{font-size:38px}.gallery-shelf{margin-top:30px}.gallery-books{grid-template-columns:1fr;gap:25px}.gallery-books .note-card{padding:4px 0 17px 85px;min-height:118px}.gallery-books .note-card::before{width:66px;height:99px}.gallery-books .note-card h3{font-size:15px}.gallery-books .card-description{font-size:12px}.gallery-activity .activity-content p{font-size:12px}.mobile-navigation{background:var(--bg);border-top-color:var(--border)}.mobile-create>svg{color:#171719;background:none;border-radius:0}.reader-brand{font-size:20px}.reader-brand .brand-mark{font-size:17px}.reader-paper{padding:28px 22px}.reader-paper h1.reader-title{font-size:27px}.page-footer{font-size:9px}.cloud-login h1{font-size:27px}}
-@media(max-width:360px){.experimental-masthead h1{font-size:40px}.gallery-edition{min-width:71px;max-width:78px}.gallery-edition>span{font-size:22px}.gallery-edition small{font-size:7px}.gallery-cover h2{font-size:26px}.gallery-cover .hero-copy{padding:22px 20px}.gallery-overline{font-size:8px}.gallery-ledger .stat-label{font-size:8px}.gallery-focus .task-title{font-size:15px}.gallery-focus .task-card-actions .text-button{font-size:11px}.gallery-journal{padding:21px!important}}
-@media(max-width:760px){html[data-design="experimental"] .gallery-cover{grid-template-columns:1fr}html[data-design="experimental"] .gallery-cover .hero-visual{min-height:215px;padding:21px 17px}}
-@media(prefers-reduced-motion:reduce){html[data-design="experimental"] .gallery-cover .hero-visual{transform:none!important}.gallery-cover:hover .experimental-collage .cut-paper{transform:rotate(-6deg)!important}.gallery-cover:hover .experimental-collage .ink-loop{stroke-dashoffset:0}.gallery-books .note-card:hover{transform:none}}
+/* Rules are scoped so choosing A, C or ink removes all B typography and layout. */
+html[data-design="experimental"] { --bg: #171719; --surface: #202023; --surface-soft: #28282c; --ink: #f2f1e9; --muted: #b0afab; --border: #444447; --primary: #d8ff3e; --primary-hover: #e6ff84; --primary-soft: #303624; --accent: #d8ff3e; --input-bg: #1c1c1f; --spot-color: rgba(216,255,62,.025); --gallery-serif: Arial,"Microsoft YaHei",sans-serif; color-scheme: dark; }
+html[data-design="experimental"][data-theme="dark"] { --bg: #101012; --surface: #19191c; --surface-soft: #242427; --border: #414145; --input-bg: #141416; }
+html[data-design="experimental"] body { background: var(--bg); color: var(--ink); }
+html[data-design="experimental"] :focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+html[data-design="experimental"] ::selection { background: var(--primary); color: rgb(23, 23, 25); }
+html[data-design="experimental"] .sidebar, html[data-design="experimental"] .topbar { background: var(--bg); border-color: var(--border); }
+html[data-design="experimental"] .brand { align-items: flex-start; gap: 10px; padding-bottom: 36px; }
+html[data-design="experimental"] .brand-mark { width: 31px; height: 35px; outline: 0px; border: 0px; background: var(--primary); color: rgb(23, 23, 25); font: bold 18px / 1 Arial, sans-serif; }
+html[data-design="experimental"] .brand-title { font-family: Arial, "Microsoft YaHei", sans-serif; font-size: 25px; font-weight: 800; line-height: 1.05; letter-spacing: -1.3px; white-space: normal; }
+html[data-design="experimental"] .brand-caption { font: 8px / 1.7 Consolas, monospace; letter-spacing: 0.2px; margin-top: 11px; color: var(--muted); }
+html[data-design="experimental"] .nav-label { letter-spacing: 2px; }
+html[data-design="experimental"] .nav-item { font-size: 13px; min-height: 48px; }
+html[data-design="experimental"] .nav-item.active { color: var(--primary); }
+html[data-design="experimental"] .nav-item.active::before { top: 15px; bottom: 15px; width: 3px; left: -12px; background: var(--primary); }
+html[data-design="experimental"] .sidebar-tip .eyebrow, html[data-design="experimental"] .sidebar-tip p { font: 11px / 2.2 "Microsoft YaHei", sans-serif; letter-spacing: 0px; }
+html[data-design="experimental"] .sidebar-tip .eyebrow { color: var(--ink); }
+html[data-design="experimental"] .sidebar .avatar { color: var(--primary); border-color: var(--border); }
+html[data-design="experimental"] .button.primary, html[data-design="experimental"] .mobile-create { background: var(--primary); border-color: var(--primary); color: rgb(23, 23, 25); box-shadow: none; font-weight: 700; }
+html[data-design="experimental"] .button.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+html[data-design="experimental"] .button.secondary, html[data-design="experimental"] .button.small { border-radius: 0px; }
+html[data-design="experimental"] .button.secondary:hover { background: var(--surface-soft); }
+html[data-design="experimental"] .button.danger { color: rgb(255, 173, 150); background: rgb(55, 42, 38); border-color: rgb(110, 73, 64); }
+html[data-design="experimental"] .icon-button.is-pinned { background: var(--primary-soft); color: var(--primary); }
+html[data-design="experimental"] .button, html[data-design="experimental"] .filter-chip, html[data-design="experimental"] .panel, html[data-design="experimental"] .link-card, html[data-design="experimental"] .note-card, html[data-design="experimental"] dialog.modal { border-radius: 0px; }
+html[data-design="experimental"] .page-header h1 { font-family: Arial, "Microsoft YaHei", sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -1px; }
+html[data-design="experimental"] .page-description { font-size: 13px; max-width: 760px; }
+html[data-design="experimental"] .eyebrow { font-family: Consolas, monospace; font-size: 10px; letter-spacing: 1px; }
+html[data-design="experimental"] .panel h2, html[data-design="experimental"] .section-head h2 { font-family: Arial, "Microsoft YaHei", sans-serif; font-weight: 700; letter-spacing: -0.5px; font-size: 22px; }
+html[data-design="experimental"] .section-head h2 small { font-size: 10px; color: var(--muted); letter-spacing: 0px; }
+html[data-design="experimental"] .text-button { font-size: 12px; }
+html[data-design="experimental"] .task-title { font-size: 17px; font-weight: 500; }
+html[data-design="experimental"] .task-summary { font-size: 13px; line-height: 1.9; }
+html[data-design="experimental"] .task-next { border-left-color: var(--primary); font-size: 12px; }
+html[data-design="experimental"] .task-next > span { color: var(--primary); }
+html[data-design="experimental"] .task-card-actions .text-button { font-size: 12px; }
+html[data-design="experimental"] .task-status-select { min-height: 35px; font-size: 12px; }
+html[data-design="experimental"] .task-card:hover { border-color: var(--primary); }
+html[data-design="experimental"] .task-card[data-status] .task-status-select { background: transparent; color: var(--muted); border-color: var(--border); }
+html[data-design="experimental"] .task-card[data-status="进行中"] .task-status-select { color: var(--primary); border-color: rgb(105, 124, 50); }
+html[data-design="experimental"] .badge, html[data-design="experimental"] .badge.green, html[data-design="experimental"] .badge.blue { background: var(--surface-soft); color: var(--ink); border-color: var(--border); }
+html[data-design="experimental"] .badge.amber { background: rgb(59, 48, 36); color: rgb(255, 209, 138); border-color: rgb(103, 83, 62); }
+html[data-design="experimental"] .card-title, html[data-design="experimental"] .note-card h3 { font-weight: 600; }
+html[data-design="experimental"] .card-description { font-size: 13px; }
+html[data-design="experimental"] .tag { font-size: 11px; }
+html[data-design="experimental"] .link-icon, html[data-design="experimental"] .topic-icon { color: var(--primary); }
+html[data-design="experimental"] .card-grid > .task-card { border-radius: 0px; }
+html[data-design="experimental"] .experimental-masthead { align-items: flex-end; margin-bottom: 20px; padding-top: 10px; }
+html[data-design="experimental"] .experimental-masthead h1 { font: 900 clamp(58px, 7.5vw, 114px) / 0.98 Arial, sans-serif; text-transform: uppercase; letter-spacing: -7px; white-space: nowrap; }
+html[data-design="experimental"] .experimental-masthead h1 em { font-style: normal; font-weight: 900; }
+html[data-design="experimental"] .experimental-masthead > div > p { font: 10px / 1.8 Consolas, monospace; letter-spacing: 1.7px; margin-top: 15px; }
+html[data-design="experimental"] .gallery-edition { flex-shrink: 0; }
+html[data-design="experimental"] .gallery-edition > span { color: var(--primary); font: italic 30px / 1.2 Georgia, serif; letter-spacing: -1px; }
+html[data-design="experimental"] .gallery-edition small { font: 9px / 2.1 Consolas, monospace; }
+html[data-design="experimental"] .gallery-home-actions { margin: 0px 0px 18px; }
+html[data-design="experimental"] .gallery-cover { display: grid; grid-template-columns: 1.05fr 0.95fr; min-height: 330px; padding: 0px; gap: 0px; border: 1px solid var(--border); background: transparent; overflow: hidden; box-shadow: none; }
+html[data-design="experimental"] .gallery-cover .hero-copy { grid-area: 1 / 2; padding: 32px; align-self: center; display: block; max-width: none; }
+html[data-design="experimental"] .gallery-overline { font: 10px / 1.8 Consolas, "Microsoft YaHei", monospace; letter-spacing: 1px; color: var(--primary); }
+html[data-design="experimental"] .gallery-cover h2 { font: 700 clamp(24px, 2.3vw, 35px) / 1.7 "Microsoft YaHei", Arial, sans-serif; writing-mode: horizontal-tb; letter-spacing: -0.5px; min-height: 0px; margin: 18px 0px 12px; color: var(--ink); }
+html[data-design="experimental"] .gallery-cover h2 span { font-size: 0.82em; }
+html[data-design="experimental"] .gallery-cover p { font-size: 12px; line-height: 2; color: var(--muted); margin: 0px; max-width: none; text-align: left; }
+html[data-design="experimental"] .gallery-continue { font-size: 11px; line-height: 1.8; max-width: 100%; margin-top: 24px; color: var(--primary); }
+html[data-design="experimental"] .gallery-cover .hero-visual { grid-area: 1 / 1; position: relative; inset: auto; display: flex; align-items: center; align-self: stretch; justify-content: center; min-height: 330px; min-width: 0px; max-width: none; width: auto; margin: 0px; padding: 24px; background: rgb(216, 255, 62); border: 0px; opacity: 1; mask-image: none; color: rgb(23, 23, 25); transform: translate3d(calc(var(--hero-parallax-x,0px)*.2),calc(var(--hero-parallax-y,0px)*.2),0); }
+html[data-design="experimental"] .experimental-collage { position: relative; --paper: #d8ff3e; --paper-raised: #f2f1e9; --ink: #20211a; --accent: #fb633a; --blue: #a17fd4; --ochre: #fb633a; --line: #62664a; --muted: #42482d; min-width: 0px; width: 100%; margin: 0px; }
+html[data-design="experimental"] .experimental-collage svg { width: 100%; height: auto; max-height: 300px; display: block; overflow: visible; }
+html[data-design="experimental"] .experimental-collage .cut-paper { transform: rotate(-6deg); transform-origin: 280px 180px; transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+html[data-design="experimental"] .gallery-cover:hover .experimental-collage .cut-paper { transform: rotate(-2deg); }
+html[data-design="experimental"] .experimental-collage .ink-loop { stroke-dasharray: 1250; stroke-dashoffset: 0; transition: stroke-dashoffset 0.6s; }
+html[data-design="experimental"] .gallery-cover:hover .experimental-collage .ink-loop { stroke-dashoffset: 30; }
+html[data-design="experimental"] .gallery-art .art-caption { position: static; display: block; text-align: right; color: rgb(50, 55, 43); font: 8px / 1.7 Consolas, "Microsoft YaHei", monospace; margin-top: 9px; letter-spacing: 0.2px; }
+html[data-design="experimental"] .gallery-margin { display: none; }
+html[data-design="experimental"] .gallery-ledger { margin-top: 0px; margin-bottom: 30px; }
+html[data-design="experimental"] .gallery-ledger .stat-card { min-height: 76px; padding-block: 18px; gap: 15px; }
+html[data-design="experimental"] .gallery-ledger .stat-label { font-size: 11px; }
+html[data-design="experimental"] .gallery-ledger .stat-number { font-family: Arial, sans-serif; font-size: 29px; font-weight: 700; letter-spacing: -1px; }
+html[data-design="experimental"] .gallery-ledger .stat-card:hover { transform: none; background: var(--surface-soft); }
+html[data-design="experimental"] .gallery-desk { grid-template-columns: minmax(0px, 1.6fr) minmax(250px, 0.9fr); gap: 32px; }
+html[data-design="experimental"] .gallery-side { border-left: 0px; padding-left: 0px; gap: 26px; }
+html[data-design="experimental"] .gallery-focus .task-title { font-size: 16px; }
+html[data-design="experimental"] .gallery-focus .task-next { font-size: 12px; }
+html[data-design="experimental"] .gallery-focus .task-card-actions .text-button { font-size: 12px; }
+html[data-design="experimental"] .gallery-focus .task-list > .task-card { padding-block: 21px; }
+html[data-design="experimental"] .gallery-journal { background: transparent; overflow: hidden; padding: 23px !important; border: 1px solid var(--primary) !important; }
+html[data-design="experimental"] .gallery-journal .eyebrow { font-size: 10px; color: var(--primary); }
+html[data-design="experimental"] .gallery-note-label { font-size: 10px; }
+html[data-design="experimental"] .gallery-journal .daily-feature-date { color: var(--primary); font: italic 38px / 1.2 Georgia, serif; letter-spacing: -1px; margin: 20px 0px 16px; }
+html[data-design="experimental"] .gallery-journal h2 { font-family: Arial, "Microsoft YaHei", sans-serif; font-size: 19px; letter-spacing: 0px; font-weight: 600; }
+html[data-design="experimental"] .gallery-journal p { font-size: 12px; line-height: 2.1; }
+html[data-design="experimental"] .gallery-journal > .text-button { color: var(--primary); }
+html[data-design="experimental"] .gallery-shortcuts { padding-top: 0px !important; border-top: 0px !important; }
+html[data-design="experimental"] .gallery-shortcuts h2 { font-size: 20px; }
+html[data-design="experimental"] .gallery-shortcuts .link-name { font-size: 13px; }
+html[data-design="experimental"] .gallery-shortcuts .link-domain { font-size: 10px; }
+html[data-design="experimental"] .gallery-shortcuts .quick-link:hover { color: var(--primary); }
+html[data-design="experimental"] .gallery-shelf { margin-top: 32px; padding-top: 28px; padding-bottom: 30px; }
+html[data-design="experimental"] .gallery-books { gap: 24px; }
+html[data-design="experimental"] .gallery-books .note-card { padding-left: 85px; min-height: 120px; }
+html[data-design="experimental"] .gallery-books .note-card::before { box-sizing: border-box; width: 66px; height: 99px; background: rgb(216, 211, 197); border-width: 1px 1px 1px 3px; border-style: solid; border-color: rgb(216, 211, 197) rgb(216, 211, 197) rgb(216, 211, 197) rgb(171, 165, 149); border-image: none; color: rgb(41, 40, 36); font: 24px / 1.05 Arial, "Microsoft YaHei", sans-serif; letter-spacing: 0px; padding: 20px 11px; }
+html[data-design="experimental"] .gallery-books .note-card:nth-child(2)::before { background: rgb(216, 255, 62); border-color: rgb(216, 255, 62) rgb(216, 255, 62) rgb(216, 255, 62) rgb(162, 195, 44); color: rgb(23, 23, 25); }
+html[data-design="experimental"] .gallery-books .note-card:nth-child(3)::before { background: rgb(161, 127, 212); border-color: rgb(161, 127, 212) rgb(161, 127, 212) rgb(161, 127, 212) rgb(121, 91, 164); color: rgb(23, 23, 25); }
+html[data-design="experimental"] .gallery-books .note-card h3 { font: 600 15px / 1.7 "Microsoft YaHei", Arial, sans-serif; }
+html[data-design="experimental"] .gallery-books .card-description { font-size: 12px; line-height: 1.8; }
+html[data-design="experimental"] .gallery-books .badge { font-size: 10px; }
+html[data-design="experimental"] .gallery-books .card-footer > .muted { font-size: 10px; }
+html[data-design="experimental"] .gallery-books .note-card:hover { transform: translateY(-3px); background: none; }
+html[data-design="experimental"] .gallery-activity .activity-content p { font-size: 12px; }
+html[data-design="experimental"] .gallery-activity .activity-content time { font-size: 10px; }
+html[data-design="experimental"] .activity-dot { background: var(--primary); }
+html[data-design="experimental"] .archive-month h2, html[data-design="experimental"] .archive-auto-panel h2, html[data-design="experimental"] .archive-document-card h2 { font-family: Arial, "Microsoft YaHei", sans-serif; letter-spacing: -0.5px; font-weight: 700; }
+html[data-design="experimental"] .archive-tabs { border-radius: 0px; background: var(--surface-soft); }
+html[data-design="experimental"] .archive-tabs a { border-radius: 0px; }
+html[data-design="experimental"] .archive-month-nav button { border-radius: 0px; }
+html[data-design="experimental"] .archive-day-stamp { border-radius: 0px; }
+html[data-design="experimental"] .archive-day-stamp strong { font-family: Arial, sans-serif; font-weight: 700; }
+html[data-design="experimental"] .archive-day h3 { font-family: Arial, "Microsoft YaHei", sans-serif; letter-spacing: 0px; }
+html[data-design="experimental"] .archive-document-card, html[data-design="experimental"] .archive-day { background: var(--surface); border-radius: 0px; }
+html[data-design="experimental"] .archive-auto-panel { border-top-color: var(--border); border-bottom-color: var(--border); }
+html[data-design="experimental"] .cloud-login-mark { background: rgb(216, 255, 62) !important; color: rgb(23, 23, 25) !important; border: 0px !important; }
+html[data-design="experimental"] .cloud-login-mark::before { content: "B/"; font: bold 30px / 1 Arial, sans-serif; }
+html[data-design="experimental"] .cloud-login h1 { font-family: Arial, "Microsoft YaHei", sans-serif; font-weight: 800; letter-spacing: -1px; }
+html[data-design="experimental"] .cloud-login .eyebrow { color: var(--primary); }
+html[data-design="experimental"] .cloud-login p, html[data-design="experimental"] .cloud-login small { color: var(--muted); }
+html[data-design="experimental"] .install-cover { background: var(--surface-soft); color: var(--ink); }
+html[data-design="experimental"] .install-cover .eyebrow { color: var(--primary); }
+html[data-design="experimental"] .install-platform-tabs button[aria-pressed="true"] { color: var(--primary); }
+html[data-design="experimental"] .reader-brand { font-family: Arial, "Microsoft YaHei", sans-serif; font-weight: 800; letter-spacing: -0.5px; }
+html[data-design="experimental"] .reader-brand .brand-mark { background: var(--primary); color: rgb(23, 23, 25); }
+html[data-design="experimental"] .reader-paper { border-radius: 0px; }
+html[data-design="experimental"] .reader-paper h1.reader-title { font-family: Arial, "Microsoft YaHei", sans-serif; font-weight: 750; letter-spacing: -0.5px; }
+html[data-design="experimental"] .markdown-body h1, html[data-design="experimental"] .markdown-body h2, html[data-design="experimental"] .markdown-body h3 { font-family: Arial, "Microsoft YaHei", sans-serif; font-weight: 650; }
+html[data-design="experimental"] .reader-content, html[data-design="experimental"] .reader-plain { line-height: 1.95; }
+html[data-design="experimental"] .markdown-body blockquote { border-color: var(--primary); }
+html[data-design="experimental"] .markdown-body a, html[data-design="experimental"] .gallery-journal .text-button, html[data-design="experimental"] .gallery-journal .eyebrow { color: var(--primary); }
+html[data-design="experimental"] .gallery-journal .daily-feature-date { color: var(--primary); }
+html[data-design="experimental"] .pointer-aura { background: radial-gradient(circle, rgba(216, 255, 62, 0.03), transparent 67%); }
+html[data-design="experimental"] .pointer-ring { border-color: rgba(216, 255, 62, 0.333); }
+html[data-design="experimental"] .pointer-ring::after { background: rgb(216, 255, 62); }
+html[data-design="experimental"] .pointer-ring.is-interactive { border-color: rgba(216, 255, 62, 0.6); background: rgba(216, 255, 62, 0.04); }
+html[data-design="experimental"] .pointer-rim { background: radial-gradient(180px circle at var(--spot-x,50%) var(--spot-y,50%),#d8ff3e36,transparent 78%); }
+html[data-design="experimental"] .pointer-streak { background: linear-gradient(90deg, transparent, rgba(216, 255, 62, 0.4), rgba(216, 255, 62, 0.667)); box-shadow: none; }
+html[data-design="experimental"] .pointer-spark { background: rgba(161, 127, 212, 0.79); box-shadow: none; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html[data-design="experimental"] body.pointer-style-active { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='34' viewBox='0 0 30 34'%3E%3Cpath d='M4 3v23l6-6 5 10 5-3-5-9h10Z' fill='%23d8ff3e' stroke='%23171719' stroke-width='1.7' stroke-linejoin='round'/%3E%3C/svg%3E") 4 3, auto; }
+  html[data-design="experimental"] body.pointer-style-active :where(a, button:not(:disabled), [role="button"]) { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='34' viewBox='0 0 30 34'%3E%3Cpath d='M4 3v23l6-6 5 10 5-3-5-9h10Z' fill='%23a17fd4' stroke='%23171719' stroke-width='1.7' stroke-linejoin='round'/%3E%3C/svg%3E") 4 3, pointer; }
+}
+@media (max-width: 1200px) {
+  html[data-design="experimental"] .experimental-masthead h1 { font-size: clamp(52px, 7.3vw, 88px); letter-spacing: -5px; }
+  html[data-design="experimental"] .gallery-edition > span { font-size: 25px; }
+  html[data-design="experimental"] .gallery-cover .hero-copy { padding: 26px; }
+  html[data-design="experimental"] .gallery-cover h2 { font-size: 27px; }
+  html[data-design="experimental"] .gallery-desk { gap: 26px; grid-template-columns: minmax(0px, 1.5fr) minmax(230px, 0.9fr); }
+  html[data-design="experimental"] .gallery-ledger .stat-card { gap: 10px; }
+  html[data-design="experimental"] .gallery-books .note-card { padding-left: 76px; }
+  html[data-design="experimental"] .gallery-books .note-card::before { width: 59px; }
+  html[data-design="experimental"] .brand-title { font-size: 23px; }
+}
+@media (max-width: 1000px) and (min-width: 761px) {
+  html[data-design="experimental"] .gallery-desk { grid-template-columns: 1fr; }
+  html[data-design="experimental"] .gallery-side { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 24px; }
+  html[data-design="experimental"] .experimental-masthead h1 { font-size: clamp(45px, 6.8vw, 64px); letter-spacing: -4px; }
+  html[data-design="experimental"] .gallery-cover .hero-copy { padding: 23px; }
+  html[data-design="experimental"] .gallery-cover h2 { font-size: 24px; }
+  html[data-design="experimental"] .gallery-cover p { font-size: 11px; }
+  html[data-design="experimental"] .gallery-cover .hero-visual { padding: 15px; }
+  html[data-design="experimental"] .gallery-books .note-card { padding: 111px 0px 0px; }
+  html[data-design="experimental"] .gallery-books .note-card::before { width: 66px; }
+}
+@media (max-width: 760px) {
+  html[data-design="experimental"] .brand-title { font-size: 29px; }
+  html[data-design="experimental"] .brand-caption { font-size: 9px; }
+  html[data-design="experimental"] .brand-mark { width: 33px; height: 38px; }
+  html[data-design="experimental"] .topbar { padding-inline: 18px; }
+  html[data-design="experimental"] .page-header h1 { font-size: 34px; }
+  html[data-design="experimental"] .page-description { font-size: 12px; }
+  html[data-design="experimental"] .experimental-masthead { align-items: flex-end; gap: 10px; padding-top: 3px; margin-bottom: 19px; }
+  html[data-design="experimental"] .experimental-masthead h1 { font-size: clamp(40px, 10vw, 68px); letter-spacing: -3px; white-space: normal; max-width: 100%; line-height: 0.98; }
+  html[data-design="experimental"] .experimental-masthead > div > p { font-size: 8px; letter-spacing: 0.7px; margin-top: 11px; }
+  html[data-design="experimental"] .gallery-edition { max-width: 96px; min-width: 76px; text-align: right; }
+  html[data-design="experimental"] .gallery-edition > span { font-size: 24px; line-height: 1.1; }
+  html[data-design="experimental"] .gallery-edition small { font-size: 7px; line-height: 1.7; display: block; margin-top: 8px; }
+  html[data-design="experimental"] .gallery-home-actions { margin-bottom: 18px; }
+  html[data-design="experimental"] .gallery-home-actions .button { min-height: 39px; font-size: 12px; }
+  html[data-design="experimental"] .gallery-cover .hero-copy { display: block; grid-area: 2 / 1; padding: 25px 23px; }
+  html[data-design="experimental"] .gallery-overline { font-size: 9px; }
+  html[data-design="experimental"] .gallery-cover h2 { font-size: 29px; margin: 15px 0px 12px; letter-spacing: -0.5px; line-height: 1.7; white-space: normal; }
+  html[data-design="experimental"] .gallery-cover p { font-size: 12px; text-align: left; max-width: none; }
+  html[data-design="experimental"] .gallery-continue { font-size: 11px; margin-top: 20px; }
+  html[data-design="experimental"] .gallery-cover .hero-visual { grid-area: 1 / 1; min-height: 215px; padding: 21px 17px; }
+  html[data-design="experimental"] .experimental-collage svg { max-height: 240px; }
+  html[data-design="experimental"] .gallery-art .art-caption { font-size: 7px; margin-top: 4px; }
+  html[data-design="experimental"] .gallery-ledger .stat-card { min-height: 78px; padding: 13px 7px; gap: 9px; }
+  html[data-design="experimental"] .gallery-ledger .stat-label { font-size: 9px; }
+  html[data-design="experimental"] .gallery-ledger .stat-number { font-size: 25px; }
+  html[data-design="experimental"] .gallery-desk { display: block; }
+  html[data-design="experimental"] .gallery-focus .section-head h2 { font-size: 23px; }
+  html[data-design="experimental"] .gallery-focus .task-title { font-size: 16px; }
+  html[data-design="experimental"] .gallery-focus .task-next { font-size: 12px; }
+  html[data-design="experimental"] .gallery-focus .task-list > .task-card { padding: 22px 0px; }
+  html[data-design="experimental"] .gallery-side { display: block; border-top: 0px; margin-top: 28px; padding-top: 0px; }
+  html[data-design="experimental"] .gallery-shortcuts { margin-top: 27px; padding: 24px 0px 0px !important; border-left: 0px !important; border-top: 1px solid var(--border) !important; }
+  html[data-design="experimental"] .gallery-journal .daily-feature-date { font-size: 38px; }
+  html[data-design="experimental"] .gallery-shelf { margin-top: 30px; }
+  html[data-design="experimental"] .gallery-books { grid-template-columns: 1fr; gap: 25px; }
+  html[data-design="experimental"] .gallery-books .note-card { padding: 4px 0px 17px 85px; min-height: 118px; }
+  html[data-design="experimental"] .gallery-books .note-card::before { width: 66px; height: 99px; }
+  html[data-design="experimental"] .gallery-books .note-card h3 { font-size: 15px; }
+  html[data-design="experimental"] .gallery-books .card-description { font-size: 12px; }
+  html[data-design="experimental"] .gallery-activity .activity-content p { font-size: 12px; }
+  html[data-design="experimental"] .mobile-navigation { background: var(--bg); border-top-color: var(--border); }
+  html[data-design="experimental"] .mobile-create > svg { color: rgb(23, 23, 25); background: none; border-radius: 0px; }
+  html[data-design="experimental"] .reader-brand { font-size: 20px; }
+  html[data-design="experimental"] .reader-brand .brand-mark { font-size: 17px; }
+  html[data-design="experimental"] .reader-paper { padding: 28px 22px; }
+  html[data-design="experimental"] .reader-paper h1.reader-title { font-size: 27px; }
+  html[data-design="experimental"] .page-footer { font-size: 9px; }
+  html[data-design="experimental"] .cloud-login h1 { font-size: 27px; }
+}
+@media (max-width: 360px) {
+  html[data-design="experimental"] .experimental-masthead h1 { font-size: 40px; }
+  html[data-design="experimental"] .gallery-edition { min-width: 71px; max-width: 78px; }
+  html[data-design="experimental"] .gallery-edition > span { font-size: 22px; }
+  html[data-design="experimental"] .gallery-edition small { font-size: 7px; }
+  html[data-design="experimental"] .gallery-cover h2 { font-size: 26px; }
+  html[data-design="experimental"] .gallery-cover .hero-copy { padding: 22px 20px; }
+  html[data-design="experimental"] .gallery-overline { font-size: 8px; }
+  html[data-design="experimental"] .gallery-ledger .stat-label { font-size: 8px; }
+  html[data-design="experimental"] .gallery-focus .task-title { font-size: 15px; }
+  html[data-design="experimental"] .gallery-focus .task-card-actions .text-button { font-size: 11px; }
+  html[data-design="experimental"] .gallery-journal { padding: 21px !important; }
+}
+@media (max-width: 760px) {
+  html[data-design="experimental"] .gallery-cover { grid-template-columns: 1fr; }
+  html[data-design="experimental"] .gallery-cover .hero-visual { min-height: 215px; padding: 21px 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-design="experimental"] .gallery-cover .hero-visual { transform: none !important; }
+  html[data-design="experimental"] .gallery-cover:hover .experimental-collage .cut-paper { transform: rotate(-6deg) !important; }
+  html[data-design="experimental"] .gallery-cover:hover .experimental-collage .ink-loop { stroke-dashoffset: 0; }
+  html[data-design="experimental"] .gallery-books .note-card:hover { transform: none; }
+}

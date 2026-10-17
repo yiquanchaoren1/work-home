@@ -1,7 +1,7 @@
 import { renderMarkdown } from './markdown.js';
-import { readWorkspace, attachmentUrl, cloudMode } from './local-api.js';
+import { readWorkspace, attachmentUrl, cloudMode } from './local-api.js?v=themes-20261017';
 import { mountPdf } from './pdf-viewer.js';
-import { applyTheme } from './ui-effects.js?v=experimental-20261017';
+import { applyTheme } from './ui-effects.js?v=themes-20261017';
 
 const root = document.querySelector('#reader');
 const downloadButton = document.querySelector('#document-download');
@@ -94,7 +94,7 @@ async function load(force = false) {
   try {
     if(!id)throw new Error('文档地址缺少 ID，请从知识库重新打开。');
     const state=await readWorkspace();
-    applyTheme(state.data.settings.theme);
+    applyTheme(state.data.settings.theme,state.data.settings.design);
     root.querySelector('.reader-refresh-warning')?.remove();
     storageNotice(state.warning);
     if(!force&&state.revision===revision)return;

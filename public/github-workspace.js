@@ -1,4 +1,4 @@
-import { validateBackup, mergeData } from './store.js';
+import { validateBackup, mergeData } from './store.js?v=themes-20261017';
 import { buildPersonalDocument, dayKey } from './personal.js';
 import { validArchiveDate, validateDailyArchives } from './daily-archives.js';
 import { archiveDocumentKinds, validateArchiveDocuments } from './archive-documents.js';
@@ -13,7 +13,7 @@ export const encodeBytes = bytes => {
 export const decodeBytes = text => Uint8Array.from(atob(text.replace(/\s/g, '')), c => c.charCodeAt(0));
 const digest = async bytes => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(x => x.toString(16).padStart(2, '0')).join('');
 const metaEqual = (a, b) => ['id', 'name', 'type', 'size'].every(k => a[k] === b[k]);
-const features = ['personal-archive-v1', 'task-links-v1', 'daily-archive-v2', 'archive-documents-v1', 'ui-refresh-v1', 'github-storage-v1'];
+const features = ['personal-archive-v1', 'task-links-v1', 'daily-archive-v2', 'archive-documents-v1', 'ui-refresh-v1','appearance-v1', 'github-storage-v1'];
 const fileType = (bytes, name) => {
   const head = decoder.decode(bytes.subarray(0, 12));
   if (head.startsWith('%PDF-')) return 'application/pdf';
@@ -98,6 +98,7 @@ export class GithubWorkspace {
   async saveNow(data, revision) {
     const clean = validateBackup(data), current = await this.state();
     if (current.revision !== revision) throw failure('其他设备已更新资料，本次没有覆盖。请保留草稿并重新载入。', 409);
+    for(const key of ['theme','design'])if(current.data.settings[key]&&!Object.hasOwn(clean.settings,key))clean.settings[key]=current.data.settings[key];
     for (const note of clean.notes) if (note.attachment) {
       const file = await this.file(`files/${note.attachment.id}.json`);
       if (!metaEqual(JSON.parse(decoder.decode(file.bytes)), note.attachment)) throw failure('附件信息不一致，未保存工作台。');

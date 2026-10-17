@@ -22,3 +22,21 @@ test('theme remains optional for legacy data and survives validation, merge and 
   const backup=await workspace.backupData(protectedState.data),target=new FileWorkspace(path.join(dir,'restored'));await target.init();const empty=await target.getState();
   const restored=await target.restore({revision:empty.revision,data:backup,files:backup.files||[],mode:'replace'});assert.deepEqual(restored.data,protectedState.data);
 });
+
+test('all four visual designs survive disk restart, old-client omissions and a full backup restore',async t=>{
+  for(const design of ['paper','experimental','gallery','porcelain']) {
+    const sample=structuredClone(seedData);sample.settings.design=design;sample.settings.theme='light';
+    assert.deepEqual(validateBackup(sample),sample);assert.equal(mergeData(sample,seedData).settings.design,design);
+  }
+  for(const design of ['unknown','',null,42])assert.throws(()=>validateBackup({...seedData,settings:{...seedData.settings,design}}),/settings.design/);
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'work-hub-design-'));
+  t.after(async()=>{assert.equal(path.dirname(dir),path.resolve(os.tmpdir()));await fs.rm(dir,{recursive:true,force:true});});
+  const workspace=new FileWorkspace(path.join(dir,'source'));await workspace.init();const before=await workspace.getState(),data=structuredClone(before.data);
+  data.settings.design='porcelain';data.settings.theme='dark';const saved=await workspace.putState({revision:before.revision,data});
+  const oldClient=structuredClone(saved.data);delete oldClient.settings.design;oldClient.settings.name='只修改名称';
+  const retained=await workspace.putState({revision:saved.revision,data:oldClient});assert.equal(retained.data.settings.design,'porcelain');
+  assert.deepEqual(retained.data.tasks,before.data.tasks);assert.deepEqual(retained.data.notes,before.data.notes);
+  const restarted=await new FileWorkspace(path.join(dir,'source')).getState();assert.equal(restarted.data.settings.design,'porcelain');
+  const target=new FileWorkspace(path.join(dir,'restored'));await target.init();const empty=await target.getState(),backup=await workspace.backupData(retained.data);
+  const restored=await target.restore({revision:empty.revision,data:backup,files:backup.files||[],mode:'replace'});assert.deepEqual(restored.data,retained.data);
+});

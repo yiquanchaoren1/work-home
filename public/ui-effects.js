@@ -1,12 +1,17 @@
 // Small, local effects. No remote fonts, animation runtime or browser storage.
 import {installPointerEffects} from './pointer-effects.js?v=trail-20261017';
+import {designFor} from './appearance.js?v=themes-20261017';
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const counters=new Map();
 
-export function applyTheme(theme='light') {
+export function applyTheme(theme='light',design='experimental') {
+  const preset=designFor(design);
   const value=theme==='dark'?'dark':'light';
+  document.documentElement.dataset.design=preset.id;
   document.documentElement.dataset.theme=value;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',document.documentElement.dataset.design==='experimental'?(value==='dark'?'#101012':'#171719'):document.documentElement.dataset.design==='porcelain'?(value==='dark'?'#181e19':'#f8f9f5'):(value==='dark'?'#0c1715':'#f3f6f3'));
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',value==='dark'?preset.night:preset.color);
+  const mark=document.querySelector('.brand-mark');if(mark)mark.textContent=preset.id==='porcelain'?'间':'B/';
+  const caption=document.querySelector('.brand-caption');if(caption)caption.textContent=preset.id==='experimental'?'WORK / NOTES / IDEAS':preset.id==='porcelain'?'私人案头':preset.id==='paper'?'工作与笔记的私人刊物':'一间安静的画廊';
   const button=document.querySelector('[data-action="theme-toggle"]');
   if(button){button.setAttribute('aria-label',value==='dark'?'切换到浅色主题':'切换到深色主题');button.title=button.getAttribute('aria-label');button.setAttribute('aria-pressed',String(value==='dark'));button.innerHTML=value==='dark'?'☀':'☾';}
 }

@@ -1,4 +1,4 @@
-import { cloudMode, githubSession } from './cloud-session.js';
+import { cloudMode, githubSession } from './cloud-session.js?v=themes-20261017';
 export { cloudMode };
 // Disk mode uses localhost; Pages mode uses the user's private GitHub repository.
 async function request(url, options = {}) {

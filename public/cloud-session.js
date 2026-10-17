@@ -1,5 +1,5 @@
 import { cloudConfig } from './cloud-config.js';
-import { GithubWorkspace } from './github-workspace.js';
+import { GithubWorkspace } from './github-workspace.js?v=themes-20261017';
 import { createDeviceSession } from './device-session.js';
 
 export const cloudMode = cloudConfig.enabled === true;

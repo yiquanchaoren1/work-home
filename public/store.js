@@ -49,6 +49,10 @@ export function validateBackup(value) {
     if(!['light','dark'].includes(value.settings.theme))throw new Error('settings.theme 仅支持 light 或 dark');
     result.settings.theme=value.settings.theme;
   }
+  if(value.settings.design!==undefined) {
+    if(!['paper','experimental','gallery','porcelain'].includes(value.settings.design))throw new Error('settings.design 主题无效');
+    result.settings.design=value.settings.design;
+  }
   const textFields = {
     tasks: ['title', 'type', 'status', 'summary', 'nextStep'],
     links: ['title', 'url', 'category', 'description'],

@@ -107,7 +107,7 @@ export class FileWorkspace {
     finally { if (handle) await handle.close().catch(() => {}); await fs.unlink(lockPath).catch(error => { if (error.code !== 'ENOENT') throw error; }); }
   }
   run(operation) { const promise = this.pending.then(() => this.withLock(operation)); this.pending = promise.catch(() => {}); return promise; }
-  envelope(value) { return { data: value.data, revision: value.revision, dataDir: this.dataDir, features:['personal-archive-v1','task-links-v1','daily-archive-v2','archive-documents-v1','ui-refresh-v1'], masterPath:this.masterPath,codexDir:this.codexDir,archiveDir:this.archiveDir,codexWorkspace:this.codexOptions.workspaceRoot, ...(value.warning ? { warning: value.warning } : {}) }; }
+  envelope(value) { return { data: value.data, revision: value.revision, dataDir: this.dataDir, features:['personal-archive-v1','task-links-v1','daily-archive-v2','archive-documents-v1','ui-refresh-v1','appearance-v1'], masterPath:this.masterPath,codexDir:this.codexDir,archiveDir:this.archiveDir,codexWorkspace:this.codexOptions.workspaceRoot, ...(value.warning ? { warning: value.warning } : {}) }; }
   async syncCodex(value) {
     const collected=await collectDailySummaries({...this.codexOptions,since:value.since||''});
     return this.run(async()=>{
@@ -234,7 +234,7 @@ export class FileWorkspace {
     // Older open tabs know only the original collections. A normal save from
     // such a client must not erase an archive it could not deserialize.
     let proposed=value.data;
-    if(current.data.settings.theme&&proposed?.settings&&typeof proposed.settings==='object'&&!Object.hasOwn(proposed.settings,'theme'))proposed={...proposed,settings:{...proposed.settings,theme:current.data.settings.theme}};
+    for(const key of ['theme','design'])if(current.data.settings[key]&&proposed?.settings&&typeof proposed.settings==='object'&&!Object.hasOwn(proposed.settings,key))proposed={...proposed,settings:{...proposed.settings,[key]:current.data.settings[key]}};
     if(current.data.personal && proposed && typeof proposed==='object' && !Array.isArray(proposed) && !Object.hasOwn(proposed,'personal'))proposed={...proposed,personal:current.data.personal};
     if(current.data.dailyArchives && proposed && typeof proposed==='object' && !Array.isArray(proposed) && !Object.hasOwn(proposed,'dailyArchives'))proposed={...proposed,dailyArchives:current.data.dailyArchives};
     if(current.data.archiveDocuments && proposed && typeof proposed==='object' && !Array.isArray(proposed) && !Object.hasOwn(proposed,'archiveDocuments'))proposed={...proposed,archiveDocuments:current.data.archiveDocuments};

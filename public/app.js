@@ -1,14 +1,15 @@
-import { STORAGE_KEY, createId, normalizeUrl, parseLinks, validateBackup } from './store.js';
+import { STORAGE_KEY, createId, normalizeUrl, parseLinks, validateBackup } from './store.js?v=themes-20261017';
 import { seedData } from './seed.js';
 import { renderMarkdown, markdownExcerpt, documentTitle, embedLocalImages } from './markdown.js';
-import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode } from './local-api.js';
-import { createPersonalUI } from './personal-ui.js?v=studio-20261017';
+import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode } from './local-api.js?v=themes-20261017';
+import { createPersonalUI } from './personal-ui.js?v=themes-20261017';
 import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
-import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=experimental-20261017';
+import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=themes-20261017';
 import { installAppPanel } from './install-app.js';
-import { cloudConnectionPanel,refreshConnectionPanel } from './cloud-session.js';
-import { renderStudioDashboard } from './studio-dashboard.js?v=experimental-20261017';
+import { cloudConnectionPanel,refreshConnectionPanel } from './cloud-session.js?v=themes-20261017';
+import { renderStudioDashboard } from './studio-dashboard.js?v=themes-20261017';
+import {designFor,designs,themeChoices} from './appearance.js?v=themes-20261017';
 
 const $ = (s, root = document) => root.querySelector(s);
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -40,7 +41,7 @@ let data = {...structuredClone(seedData), tasks:[],links:[],notes:[],records:[],
 let noteDirty = false, previewTimer, documentDrafts = [], documentSelectedFiles = [], documentImageFiles = [], documentImportGeneration = 0;
 let lastView='',commandIndex=-1;
 let masterPath='',codexDir='',codexWorkspace='',documentUploadReturn='notes';
-let archiveStatus={},reloading=false;
+let archiveStatus={},reloading=false,appearanceSupported=false;
 let undoAction=null;
 const personalUI=createPersonalUI({data:()=>data,archiveStatus:()=>archiveStatus,masterPath:()=>masterPath,codexDir:()=>codexDir,codexWorkspace:()=>codexWorkspace,esc,field,selectField,showModal,commit,toast,download,render,dirty:value=>{noteDirty=value;},discard:canDiscardDocument,upload:startDocumentUpload});
 let route = () => { const parts = location.hash.slice(1).split('/'); return {page:parts[0]==='records'?'dashboard':parts[0] || 'dashboard', id:decodeURIComponent(parts.slice(1).join('/'))}; };
@@ -78,7 +79,8 @@ function acceptState(state) {
   masterPath=state.masterPath||masterPath;
   archiveStatus=state.archiveSync || archiveStatus;
   data = validateBackup(state.data); revision = state.revision; dataDir = state.dataDir || dataDir; diskWarning=state.warning||''; loadError = '';
-  applyTheme(data.settings.theme);
+  appearanceSupported=state.features.includes('appearance-v1');
+  applyTheme(data.settings.theme,data.settings.design);
 }
 async function initialize() {
   if(initializing||busy||modal.open)return;
@@ -194,7 +196,7 @@ function render() {
   if(diskWarning)$('#content').insertAdjacentHTML('afterbegin',`<div class="callout error"><div><strong>本机文件提示</strong><p>${esc(diskWarning)}</p></div></div>`);
   if(['notes','links'].includes(page))$('#content').insertAdjacentHTML('afterbegin',`<nav class="resource-tabs" aria-label="资料分类"><a href="#notes" ${page==='notes'?'aria-current="page"':''}>知识文档</a><a href="#links" ${page==='links'?'aria-current="page"':''}>链接库</a></nav>`);
   if(page==='settings')$('#content').insertAdjacentHTML('beforeend',`<section class="panel" style="margin-top:20px"><h2>个人档案也随完整备份保存</h2><p class="hint">${personalData(data).entries.length} 条个人档案 · ${personalData(data).journals.length} 篇每日记录（含修订历史）。完整备份同时保留知识库原文件；Markdown 主档案可在“我的 AI 文档”下载。</p><a class="text-button" href="#portable">查看我的 AI 文档 →</a></section>`);
-  if(page==='settings')$('#content').insertAdjacentHTML('beforeend',`<section class="panel appearance-panel"><div><div class="eyebrow">APPEARANCE</div><h2>选择你的工作氛围</h2><p class="hint">主题随本机设置保存，文档阅读页也会使用同一主题。</p></div><button class="button secondary" data-action="theme-toggle">${data.settings.theme==='dark'?'切换到浅色主题':'切换到深色主题'}</button></section>`);
+  if(page==='settings')$('#content').insertAdjacentHTML('beforeend',`<section class="panel appearance-panel theme-settings"><div class="section-head"><div><div class="eyebrow">APPEARANCE</div><h2>选择你的工作氛围</h2><p class="hint">点击即可切换并保存。文档阅读页使用相同外观。</p></div><button class="button secondary" data-action="theme-toggle">${data.settings.theme==='dark'?'切换到浅色主题':'切换到深色主题'}</button></div>${themeChoices(data.settings.design)}</section>`);
   refreshConnectionPanel();
   const view=page+'/'+id;refreshVisuals($('#content'),view!==lastView);lastView=view;
   document.body.dataset.page=page;
@@ -202,7 +204,7 @@ function render() {
 }
 function showModal(title,body,footer='',wide=false) {
   clearTimeout(previewTimer);
-  modal.classList.remove('note-modal','command-modal','task-drawer');
+  modal.classList.remove('note-modal','command-modal','task-drawer','appearance-modal');
   modal.classList.toggle('wide',wide);
   modal.innerHTML = `<div class="modal-header"><h2 id="modal-title">${title}</h2><button class="icon-button" data-action="close" aria-label="关闭">${icon('close')}</button></div><div class="modal-body">${body}</div>${footer?`<div class="modal-footer">${footer}</div>`:''}`;
   if(!modal.open) modal.showModal();
@@ -420,7 +422,24 @@ document.addEventListener('click',async event=>{
       const collapsed=document.body.classList.toggle('sidebar-collapsed');
       el.setAttribute('aria-expanded',String(!collapsed));el.setAttribute('aria-label',collapsed?'展开侧栏':'收起侧栏');el.title=el.getAttribute('aria-label');
     }
-    if(action==='theme-toggle'){await commit(next=>{next.settings.theme=next.settings.theme==='dark'?'light':'dark';});toast(data.settings.theme==='dark'?'已切换到深色主题':'已切换到浅色主题');return;}
+    if(action==='theme-picker'){
+      if(!canDiscardDocument())return;
+      showModal('外观与主题',`<p class="hint theme-picker-hint">选择一套风格，点击后立即保存。浅色与深色可独立切换。</p>${themeChoices(data.settings.design)}`,`<button class="button secondary" data-action="theme-toggle">${data.settings.theme==='dark'?'切换到浅色主题':'切换到深色主题'}</button>`);
+      modal.classList.add('appearance-modal');return;
+    }
+    if(action==='design-select'){
+      if(!appearanceSupported)throw new Error('请重新启动本机服务后切换视觉主题；现有资料不会改变。');
+      const preset=designs.find(item=>item.id===el.dataset.designId);if(!preset)throw new Error('主题不存在');
+      const fromPicker=modal.open&&modal.classList.contains('appearance-modal');
+      if(designFor(data.settings.design).id!==preset.id||data.settings.theme!==preset.mode)await commit(next=>{next.settings.design=preset.id;next.settings.theme=preset.mode;});
+      if(fromPicker){modal.close();$('#theme-picker-button')?.focus();}else document.querySelector(`[data-design-id="${preset.id}"]`)?.focus();
+      toast(`已切换为${preset.label}`);return;
+    }
+    if(action==='theme-toggle'){
+      await commit(next=>{next.settings.theme=next.settings.theme==='dark'?'light':'dark';});
+      const label=data.settings.theme==='dark'?'切换到浅色主题':'切换到深色主题';if(modal.open&&modal.classList.contains('appearance-modal'))modal.querySelector('[data-action="theme-toggle"]').textContent=label;
+      toast(data.settings.theme==='dark'?'已切换到深色主题':'已切换到浅色主题');return;
+    }
     if(action==='navigate'){modal.close();location.hash=el.dataset.page;}
     if(action==='settings')location.hash='settings';
     if(action==='reload-data')await reloadWorkspace();

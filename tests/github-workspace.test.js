@@ -44,6 +44,16 @@ test('GitHub saves preserve all data and reject stale writers and failed request
   const before=fake.files.get('workspace.json').sha;fake.offline();
   await assert.rejects(a.save(saved.data,saved.revision),/无法连接 GitHub/);assert.equal(fake.files.get('workspace.json').sha,before);
 });
+
+test('cloud appearance survives reopen and omitted settings without bypassing conflicts',async()=>{
+  const fake=fakeGithub(),workspace=await fake.make().connect(),first=await workspace.state(),data=structuredClone(first.data);
+  data.settings.design='gallery';data.settings.theme='light';const saved=await workspace.save(data,first.revision);
+  const reopened=await fake.make().connect();assert.deepEqual((await reopened.state()).data.settings,saved.data.settings);
+  const legacy=structuredClone(saved.data);delete legacy.settings.design;delete legacy.settings.theme;legacy.settings.name='名称变化';
+  const retained=await workspace.save(legacy,saved.revision);assert.equal(retained.data.settings.design,'gallery');assert.equal(retained.data.settings.theme,'light');assert.deepEqual(retained.data.tasks,first.data.tasks);
+  await assert.rejects(reopened.save(saved.data,saved.revision),error=>error.status===409);
+  const restored=await fake.make().connect();assert.deepEqual((await restored.state()).data,retained.data);
+});
 test('private binary upload, integrity checks and full restore preserve original bytes',async()=>{
   const fake=fakeGithub(),workspace=await fake.make().connect(),bytes=new TextEncoder().encode('Chinese text 中文\r\n  preserve spaces  ');
   const meta=await workspace.upload(new File([bytes],'original.txt',{type:'text/plain'}));

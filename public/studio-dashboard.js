@@ -1,16 +1,19 @@
-import {experimentalArtwork} from './experimental-art.js?v=experimental-20261017';
+import {experimentalArtwork} from './experimental-art.js?v=themes-20261017';
+import {porcelainArtwork} from './porcelain-art.js?v=themes-20261017';
+import {designFor} from './appearance.js?v=themes-20261017';
 
 // Every work item, count, document and excerpt comes from the current workspace.
 export function renderStudioDashboard(ctx) {
  const {data,esc,icon,fullDate,dayKey,markdownExcerpt,taskCard,empty,noteCard,activities,addButton,importButton,sorted}=ctx;
+ const preset=designFor(data.settings.design),ink=preset.id==='porcelain';
  const active=data.tasks.filter(task=>!['已完成','资料归档'].includes(task.status));
  const shortcuts=sorted(data.links).slice(0,5);
  const summaries=(data.dailyArchives||[]).filter(item=>item.date<dayKey()).sort((a,b)=>b.date.localeCompare(a.date));
  const latest=summaries[0],current=active[0];
  const stats=[['tasks',active.length,'待推进事项'],['links',data.links.length,'常用链接'],['notes',data.notes.length,'知识文档'],['archives',summaries.length,'每日摘要']];
- return `<header class="gallery-masthead experimental-masthead"><div><h1>Bing‘ <em>House</em></h1><p>WORK, NOTES & IDEAS</p></div><div class="gallery-edition"><span>Vol. 01</span><small>${fullDate(new Date())}</small></div></header>`+
+ return `<header class="gallery-masthead ${preset.id==='experimental'?'experimental-masthead':''}"><div><h1>Bing‘ <em>House</em></h1><p>${ink?'私人案头　／　工作与笔记':'WORK, NOTES & IDEAS'}</p></div><div class="gallery-edition"><span>${ink?'静室 · 卷一':'Vol. 01'}</span><small>${fullDate(new Date())}</small></div></header>`+
  `<div class="gallery-home-actions">${importButton()}${addButton('tasks','新建事项')}</div>`+
- `<section class="hero studio-hero gallery-cover" aria-label="实验工作室"><div class="hero-copy"><span class="gallery-overline">一间自己的工作室 ／ B.H.</span><h2>在做的事，<br><span>和想明白的事。</span></h2><p>写代码、读文档、做记录。<br>也给暂时没有答案的想法留个位置。</p><a class="gallery-continue" href="${current?'#detail/'+encodeURIComponent(current.id):'#tasks'}">${current?'继续：'+esc(current.title):'查看工作事项'} ${icon('arrow')}</a></div><div class="hero-visual gallery-art">${experimentalArtwork()}</div><span class="gallery-margin" aria-hidden="true">WORK IN PROGRESS</span></section>`+
+ `<section class="hero studio-hero gallery-cover" aria-label="${preset.label}"><div class="hero-copy"><span class="gallery-overline">${ink?'案头 · 记事':'一间自己的工作室 ／ B.H.'}</span>${ink?'<h2>静室</h2><p>工作与笔记，<br>在这里慢慢整理。</p>':'<h2>在做的事，<br><span>和想明白的事。</span></h2><p>写代码、读文档、做记录。<br>也给暂时没有答案的想法留个位置。</p>'}<a class="gallery-continue" href="${current?'#detail/'+encodeURIComponent(current.id):'#tasks'}">${current?'继续：'+esc(current.title):'查看工作事项'} ${icon('arrow')}</a></div><div class="hero-visual gallery-art">${ink?porcelainArtwork():experimentalArtwork()}</div><span class="gallery-margin" aria-hidden="true">${ink?'瓷白 · 墨色 · 朱印':'WORK IN PROGRESS'}</span></section>`+
  `<nav class="stats-grid studio-stats gallery-ledger" aria-label="工作概览">${stats.map(([target,n,label])=>`<a class="stat-card" href="#${target}"><span class="stat-label">${label}</span><span class="stat-number" data-count-key="${target}">${n}</span>${icon('arrow','stat-arrow')}</a>`).join('')}</nav>`+
  `<div class="dashboard-grid studio-bento gallery-desk"><section class="panel focus-panel gallery-focus"><div class="section-head"><h2>案头 <small>手边事务</small></h2><a href="#tasks" class="text-button">全部事项 ${icon('arrow')}</a></div>${active.length?`<div class="task-list">${active.slice(0,3).map(task=>taskCard(task)).join('')}</div>`:empty('案头暂时没有待推进事项','新建一件事，或查看已经完成的工作。','new-task','添加第一件事')}</section>`+
  `<div class="stack gallery-side"><section class="panel daily-feature gallery-journal"><div class="section-head"><span class="eyebrow">日　录</span><span class="gallery-note-label">${latest?'最近归档':'每日摘要'}</span></div><div class="daily-feature-date">${latest?esc(latest.date.slice(5).replace('-','.')):'—'}<small>${latest?esc(latest.date.slice(0,4)):'等待归档'}</small></div><h2>${latest?esc(latest.title):'这里留给每日记录。'}</h2><p>${latest?esc(markdownExcerpt(latest.body.replace(/^# .*\n+/,''),140)):'已结束日期的摘要会在整理上传后自动出现。'}</p><a class="text-button" href="${latest?'./daily-archive.html?date='+encodeURIComponent(latest.date):'#archives'}" ${latest?'target="_blank" rel="noopener noreferrer"':''}>${latest?'展开这一页':'查看工作档案'} ${icon('arrow')}</a></section>`+
