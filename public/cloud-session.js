@@ -6,12 +6,18 @@ export const cloudMode = cloudConfig.enabled === true;
 let connection, connecting, credentials;
 let remembered = false, deviceMessage = '';
 let readerState, inheritedSession;
+let hasPendingSync=()=>false;
+export function setPendingSyncCheck(check){hasPendingSync=check;}
 const pendingReaders = new Map();
 const trustedReaders = new Set();
 const appRoot = new URL('./',import.meta.url);
 const deviceSession = createDeviceSession(appRoot);
 const sessionChannel = cloudMode && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('work-hub-signout:'+appRoot.pathname) : null;
-if(sessionChannel)sessionChannel.onmessage=event=>{if(event.data?.type==='signout'){connection=credentials=undefined;location.replace(appRoot.href);}};
+if(sessionChannel)sessionChannel.onmessage=event=>{if(event.data?.type==='signout'){
+  connection=credentials=undefined;
+  if(hasPendingSync()){deviceMessage='其他页面已退出连接，未同步草稿仍保留在当前页面。';window.dispatchEvent(new Event('work-hub-session-ended'));refreshConnectionPanel();}
+  else location.replace(appRoot.href);
+}};
 
 export function cloudConnectionPanel() {
   if (!cloudMode) return '';
@@ -38,7 +44,7 @@ function previewFor(url) {
   const note=url.pathname.endsWith('/document.html')&&data.notes.find(n=>n.id===url.searchParams.get('id'));
   const archive=url.searchParams.get('archive'),date=url.searchParams.get('date');
   const document=url.pathname.endsWith('/daily-archive.html')&&(archive?data.archiveDocuments?.find(n=>n.id===archive):data.dailyArchives?.find(n=>n.date===date));
-  if(!note&&!document)return null;
+  if(!note&&!document)return readerState.pendingSync?{...meta,data:{settings:data.settings,notes:[],tasks:[],archiveDocuments:[],dailyArchives:[]}}:null;
   return {...meta,data:{settings:data.settings,notes:note?[note]:[],tasks:note?data.tasks.filter(t=>t.id===note.taskId).map(t=>({id:t.id,title:t.title})):[],...(archive?{archiveDocuments:[document]}:{dailyArchives:document?[document]:[]})}};
 }
 
@@ -62,6 +68,7 @@ if (cloudMode && typeof window !== 'undefined') {
         if(!credentials)throw new Error('请先连接私有资料。');
         await deviceSession.save(credentials);remembered=true;deviceMessage='';refreshConnectionPanel();
       }else if(button.dataset.cloudSession==='logout') {
+        if(hasPendingSync())throw new Error('还有未同步修改，请先同步成功，或下载并处理待同步草稿后再退出。');
         await deviceSession.clear();remembered=false;connection=credentials=undefined;
         readerState=undefined;pendingReaders.clear();trustedReaders.clear();sessionChannel?.postMessage({type:'signout'});
         location.replace(appRoot.href);
@@ -96,7 +103,7 @@ function readerSession() {
 }
 async function requestReaderSession() {
   const sharedNonce = new URLSearchParams(location.hash.slice(1)).get('cloud-session');
-  if (!window.opener) return null;
+  if (!window.opener || window.opener.closed) return null;
   const nonce = sharedNonce || crypto.randomUUID();
   if(sharedNonce)history.replaceState(null,'',location.pathname+location.search);
   return new Promise(resolve => {
@@ -107,9 +114,9 @@ async function requestReaderSession() {
     window.opener.postMessage({type:'work-hub-reader-request',nonce},location.origin);
   });
 }
-export async function readerPreview() {
+export async function readerPreview({refresh=false} = {}) {
   if(!cloudMode)return null;
-  return (await readerSession())?.snapshot || null;
+  return (await (refresh?requestReaderSession():readerSession()))?.snapshot || null;
 }
 
 function promptLogin({saved=null,notice=''} = {}) {

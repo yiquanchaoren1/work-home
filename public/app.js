@@ -1,13 +1,14 @@
 import { STORAGE_KEY, createId, normalizeUrl, parseLinks, validateBackup } from './store.js?v=themes-20261017';
 import { seedData } from './seed.js';
 import { renderMarkdown, markdownExcerpt, documentTitle, embedLocalImages } from './markdown.js';
-import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode } from './local-api.js?v=perf-20261018';
-import { createPersonalUI } from './personal-ui.js?v=perf-20261018';
+import { readWorkspace, writeWorkspace, migrateWorkspace, readBackup, restoreWorkspace, uploadFile,cloudMode,rememberReaderState } from './local-api.js?v=sync-20261018';
+import { BackgroundSync } from './background-sync.js?v=sync-20261018';
+import { createPersonalUI } from './personal-ui.js?v=sync-20261018';
 import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
 import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=themes-20261017';
 import { installAppPanel } from './install-app.js';
-import { cloudConnectionPanel,refreshConnectionPanel } from './cloud-session.js?v=perf-20261018';
+import { cloudConnectionPanel,refreshConnectionPanel,setPendingSyncCheck } from './cloud-session.js?v=sync-20261018';
 import { renderStudioDashboard } from './studio-dashboard.js?v=themes-20261017';
 import {designFor,designs,themeChoices} from './appearance.js?v=themes-20261017';
 
@@ -43,7 +44,37 @@ let lastView='',commandIndex=-1;
 let masterPath='',codexDir='',codexWorkspace='',documentUploadReturn='notes';
 let archiveStatus={},reloading=false,appearanceSupported=false;
 let undoAction=null;
-const personalUI=createPersonalUI({data:()=>data,archiveStatus:()=>archiveStatus,masterPath:()=>masterPath,codexDir:()=>codexDir,codexWorkspace:()=>codexWorkspace,esc,field,selectField,showModal,commit,toast,download,render,dirty:value=>{noteDirty=value;},discard:canDiscardDocument,upload:startDocumentUpload});
+let lastState,lastViewVersion=-1,lastSyncCount=0,lastSyncWake=0;
+const background=cloudMode?new BackgroundSync({write:(value,version)=>writeWorkspace(value,version,lastState?.dataDir),read:()=>readWorkspace({archives:false,fresh:true}),validate:validateBackup,onChange:syncChanged}):null;
+setPendingSyncCheck(()=>Boolean(background?.pending));
+function syncFeedback(message){return cloudMode&&background?.pending?String(message).replace(/已保存到本机|已保存到云端|已保存/g,'已在当前页面更新')+' · 后台同步中':message;}
+function syncStatus(){
+  if(!background)return;
+  const state=background.state;
+  if(state.pending||busy)document.body.dataset.saving='true';else delete document.body.dataset.saving;
+  document.body.dataset.syncState=state.error?'error':state.pending?'pending':'idle';
+  for(const host of document.querySelectorAll('[data-sync-status]')){
+    const failed=Boolean(state.error),count=state.pending;
+    host.hidden=!count;
+    host.classList.toggle('is-error',failed);
+    if(!count){host.replaceChildren();continue;}
+    host.innerHTML=`<div class="sync-strip-summary"><strong>${failed?'同步已暂停':state.active?'后台同步中':'等待后台同步'} · ${count} 项更改</strong><span>当前页面已更新${failed?'，草稿尚未上传':'，可以继续操作'}</span></div>${failed?`<p>${esc(state.error.message)}</p><p>未同步内容只保留在当前页面，刷新或关闭前请先同步或下载草稿。</p>`:''}<div class="sync-strip-actions">${failed?'<button type="button" class="button secondary small" data-sync-action="retry">重试同步</button>':''}<button type="button" class="text-button" data-sync-action="draft">下载草稿</button>${failed?'<button type="button" class="text-button" data-sync-action="discard">放弃草稿并载入云端</button>':''}</div>`;
+  }
+}
+function syncChanged(state){
+  data=state.data;revision=state.revision;
+  if(lastState?.dataDir&&state.metadata.dataDir!==lastState.dataDir)archiveStatus={};
+  lastState={...lastState,...state.metadata,data,revision};dataDir=lastState.dataDir||dataDir;
+  masterPath=lastState.masterPath||masterPath;codexDir=lastState.codexDir||codexDir;codexWorkspace=lastState.codexWorkspace||codexWorkspace;
+  rememberReaderState({...lastState,data,revision,pendingSync:state.pending>0,syncError:state.error?.message});
+  const changed=state.version!==lastViewVersion;lastViewVersion=state.version;
+  if(changed&&!initializing){applyTheme(data.settings.theme,data.settings.design);render();}
+  syncStatus();
+  if(!state.pending)for(const notice of document.querySelectorAll('.toast[data-pending-feedback]'))notice.remove();
+  if(lastSyncCount&&!state.pending&&!state.error&&state.outcome==='synced')toast('所有修改已同步至云端');
+  lastSyncCount=state.pending;
+}
+const personalUI=createPersonalUI({data:()=>data,archiveStatus:()=>archiveStatus,masterPath:()=>masterPath,codexDir:()=>codexDir,codexWorkspace:()=>codexWorkspace,esc,field,selectField,showModal,commit,toast,download,render,beforeRemoteRead:()=>background?.flush(),dirty:value=>{noteDirty=value;},discard:canDiscardDocument,upload:startDocumentUpload});
 let route = () => { const parts = location.hash.slice(1).split('/'); return {page:parts[0]==='records'?'dashboard':parts[0] || 'dashboard', id:decodeURIComponent(parts.slice(1).join('/'))}; };
 const date = (s) => new Intl.DateTimeFormat('zh-CN', {timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit'}).format(new Date(s));
 const fullDate = (s) => new Intl.DateTimeFormat('zh-CN', {timeZone:'Asia/Shanghai',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(s));
@@ -59,11 +90,11 @@ const badge = (s) => `<span class="badge ${/已完成|通过/.test(s)?'green':/�
 const taskName = (id) => data.tasks.find(t=>t.id===id)?.title || '';
 const opts = (xs,selected) => xs.map(x=>`<option ${x===selected?'selected':''} value="${esc(x)}">${esc(x)}</option>`).join('');
 const taskOptions = (selected='') => `<option value="">暂不关联</option>${data.tasks.map(t=>`<option value="${esc(t.id)}" ${t.id===selected?'selected':''}>${esc(t.title)}</option>`).join('')}`;
-function toast(message, error = false) { const el = document.createElement('div'); el.className = 'toast' + (error?' error':''); el.textContent = message;el.setAttribute('role',error?'alert':'status');if(modal.open){el.classList.add('inline-feedback');(modal.querySelector('.modal-footer')||modal.querySelector('.modal-body')).append(el);}else $('#toasts').append(el); setTimeout(()=>el.remove(),error?7000:3500); }
+function toast(message, error = false) { const el = document.createElement('div'); el.className = 'toast' + (error?' error':'');if(background?.pending&&!error){for(const old of document.querySelectorAll('.toast[data-pending-feedback]'))old.remove();el.dataset.pendingFeedback='';}el.textContent = error?message:syncFeedback(message);el.setAttribute('role',error?'alert':'status');if(modal.open){el.classList.add('inline-feedback');(modal.querySelector('.modal-footer')||modal.querySelector('.modal-body')).append(el);}else $('#toasts').append(el); setTimeout(()=>el.remove(),error?7000:3500); }
 function offerUndo(message,mutate,announcement) {
   const key=createId(),el=document.createElement('div');
-  undoAction={key,revision,mutate,announcement};
-  el.className='toast toast-success';el.setAttribute('role','status');el.append(document.createTextNode(message));
+  undoAction={key,revision:background?background.version:revision,mutate,announcement};
+  el.className='toast toast-success';el.setAttribute('role','status');el.append(document.createTextNode(background?syncFeedback(message).replace(/ · 后台同步中$/,''):message));
   const button=document.createElement('button');button.type='button';button.textContent='撤销';button.dataset.action='undo-work-change';button.dataset.id=key;
   el.append(button);
   if(modal.open){el.classList.add('inline-feedback');(modal.querySelector('.modal-footer')||modal.querySelector('.modal-body')).append(el);}else $('#toasts').append(el);
@@ -80,10 +111,12 @@ function acceptState(state) {
   archiveStatus=state.archiveSync || archiveStatus;
   data = validateBackup(state.data); revision = state.revision; dataDir = state.dataDir || dataDir; diskWarning=state.warning||''; loadError = '';
   appearanceSupported=state.features.includes('appearance-v1');
+  lastState=state;
+  if(background)background.initialize(state);
   applyTheme(data.settings.theme,data.settings.design);
 }
 async function initialize() {
-  if(initializing||busy||modal.open)return;
+  if(initializing||busy||modal.open||background?.pending)return;
   initializing=true;
   try {
     acceptState(await readWorkspace(cloudMode?{archives:false}:{}));
@@ -104,13 +137,15 @@ async function initialize() {
   if(cloudMode&&!loadError)void reloadWorkspace(true);
 }
 async function reloadWorkspace(silent = false) {
+  if(background?.pending){if(!silent)toast('还有未同步修改，已保留当前页面；请先处理待同步草稿。',true);return;}
   if (busy || initializing || reloading || modal.open) return;
   if (silent && document.activeElement?.matches('input,textarea,select')) return;
   const previousRevision=revision;
+  const previousVersion=background?.version;
   reloading=true;
   try {
     const current = await readWorkspace();
-    if (modal.open || busy || initializing || previousRevision!==revision) return;
+    if (modal.open || busy || initializing || previousRevision!==revision || background?.pending || previousVersion!==background?.version) return;
     const changed = current.revision !== revision;
     acceptState(current); render();
     if (!silent) toast(changed ? '已载入本机最新数据' : '当前已是最新数据');
@@ -126,8 +161,8 @@ async function withBusy(operation, label = '正在处理，请稍候…') {
   const pending=document.createElement('div');pending.className='toast sync-pending';pending.setAttribute('role','status');pending.textContent=label;
   (modal.open?(modal.querySelector('.modal-footer')||modal.querySelector('.modal-body')):$('#toasts')).append(pending);
   document.body.dataset.saving='true';
-  try { return await operation(); }
-  finally { busy=false;pending.remove();delete document.body.dataset.saving;buttons.forEach(button=>{if(button.isConnected)button.disabled=false;}); }
+  try { if(background)await background.flush();return await operation(); }
+  finally { busy=false;pending.remove();delete document.body.dataset.saving;syncStatus();buttons.forEach(button=>{if(button.isConnected)button.disabled=false;}); }
 }
 async function commit(mutator, message, {preview = false} = {}) {
   if(busy)throw new Error('正在保存上一项更改，请稍候。');
@@ -136,6 +171,7 @@ async function commit(mutator, message, {preview = false} = {}) {
   mutator(next);
   if (message) next.activity.unshift({id:createId(),text:message,at:new Date().toISOString()});
   next.activity = next.activity.slice(0,300);
+  if(background)return background.enqueue(next,message||'外观或工作台修改');
   const previous=data;
   if(preview){data=validateBackup(next);applyTheme(data.settings.theme,data.settings.design);render();}
   try {acceptState(await withBusy(()=>writeWorkspace(next, revision),'正在保存到'+(cloudMode?'云端':'本机')+'，完成前请勿关闭页面…'));render();}
@@ -209,6 +245,7 @@ function render() {
   refreshConnectionPanel();
   const view=page+'/'+id;refreshVisuals($('#content'),view!==lastView);lastView=view;
   document.body.dataset.page=page;
+  syncStatus();
   if(modal.classList.contains('task-drawer'))for(const select of modal.querySelectorAll('[data-task-status]')) { const task=data.tasks.find(item=>item.id===select.dataset.taskStatus);if(task)select.value=task.status; }
 }
 function showModal(title,body,footer='',wide=false) {
@@ -216,6 +253,7 @@ function showModal(title,body,footer='',wide=false) {
   modal.classList.remove('note-modal','command-modal','task-drawer','appearance-modal');
   modal.classList.toggle('wide',wide);
   modal.innerHTML = `<div class="modal-header"><h2 id="modal-title">${title}</h2><button class="icon-button" data-action="close" aria-label="关闭">${icon('close')}</button></div><div class="modal-body">${body}</div>${footer?`<div class="modal-footer">${footer}</div>`:''}`;
+  if(background){const status=document.createElement('aside');status.className='sync-strip sync-strip-modal';status.dataset.syncStatus='';status.setAttribute('role','status');modal.querySelector('.modal-header').after(status);syncStatus();}
   if(!modal.open) modal.showModal();
 }
 function field(label,name,value='',type='text',full=false,required=false) { return `<label class="field ${full?'full':''}">${label}${required?' <span class="required">*</span>':''}${type==='textarea'?`<textarea name="${name}" rows="${full?5:3}" ${required?'required':''}>${esc(value)}</textarea>`:`<input name="${name}" type="${type}" value="${esc(value)}" ${required?'required':''} ${name==='title'?'maxlength="180"':''}>`}</label>`; }
@@ -423,7 +461,7 @@ document.addEventListener('click',async event=>{
     if(action==='task-peek')taskPeek(id);
     if(action==='undo-work-change') {
       const saved=undoAction;
-      if(!saved||saved.key!==id||saved.revision!==revision)throw new Error('内容已有后续变化，无法撤销旧操作。');
+      if(!saved||saved.key!==id||saved.revision!==(background?background.version:revision))throw new Error('内容已有后续变化，无法撤销旧操作。');
       await commit(saved.mutate,saved.announcement);undoAction=null;el.closest('.toast')?.remove();toast('已撤销，内容已保存到本机');return;
     }
     if(action==='menu')document.body.classList.toggle('menu-open');
@@ -593,11 +631,25 @@ function openEditRoute() {
   else toast('文档已不存在，请返回知识库重新选择',true);
   history.replaceState(null,'','#notes');
 }
-window.addEventListener('beforeunload',event=>{if(noteDirty||busy){event.preventDefault();event.returnValue='';}});
+window.addEventListener('beforeunload',event=>{if(noteDirty||busy||background?.pending){event.preventDefault();event.returnValue='';}});
 window.addEventListener('hashchange',()=>{filter='';query='';document.body.classList.remove('menu-open');render();openEditRoute();window.scrollTo(0,0);if(['archives','profile','journal','portable'].includes(route().page))void reloadWorkspace(true);});
 window.addEventListener('focus',()=>{if(!modal.open)void reloadWorkspace(true);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void reloadWorkspace(true);});
 setInterval(()=>{if(document.visibilityState==='visible')void reloadWorkspace(true);},60000);
 $('#content').textContent='正在读取本机工作台……';
+if(background){
+  const status=document.createElement('aside');status.id='background-sync';status.className='sync-strip';status.dataset.syncStatus='';status.setAttribute('role','status');status.hidden=true;$('#content').before(status);
+  document.addEventListener('click',async event=>{
+    const action=event.target.closest('[data-sync-action]')?.dataset.syncAction;if(!action)return;
+    try{
+      if(action==='retry')await background.retry();
+      if(action==='draft')download(`Bing‘ House未同步草稿-${Date.now()}.json`,JSON.stringify(background.draft(),null,2));
+      if(action==='discard'&&confirm('确定放弃当前页面全部未同步修改和当前编辑草稿并载入云端吗？如需保留，请先取消并下载草稿。')){await background.discardAndReload();noteDirty=false;modal.close();}
+    }catch(error){toast(error.message,true);}
+  });
+  const resume=()=>{if(background.error&&background.error.status!==409&&background.pending&&Date.now()-lastSyncWake>5000){lastSyncWake=Date.now();void background.retry();}};
+  window.addEventListener('online',resume);window.addEventListener('focus',resume);
+  window.addEventListener('work-hub-session-ended',()=>background.pause());
+}
 installSpotlight();
 await initialize();

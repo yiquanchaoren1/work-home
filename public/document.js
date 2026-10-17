@@ -1,5 +1,5 @@
 import { renderMarkdown } from './markdown.js';
-import { readWorkspace, attachmentUrl, cloudMode, readerPreview } from './local-api.js?v=perf-20261018';
+import { readWorkspace, attachmentUrl, cloudMode, readerPreview } from './local-api.js?v=sync-20261018';
 import { mountPdf } from './pdf-viewer.js';
 import { applyTheme } from './ui-effects.js?v=themes-20261017';
 
@@ -8,6 +8,7 @@ const downloadButton = document.querySelector('#document-download');
 const editLink = document.querySelector('#document-edit');
 const id = new URL(location.href).searchParams.get('id');
 let currentNote, revision, signature, loading = false, generation = 0, cleanupPreview;
+let pendingPreview=false,previewTimer;
 const element = (tag, className, text) => {
   const node=document.createElement(tag);
   if(className)node.className=className;
@@ -91,17 +92,28 @@ async function render(note, state, ticket) {
 }
 async function load(force = false) {
   if(loading)return;loading=true;const ticket=++generation;
+  clearTimeout(previewTimer);
   try {
     if(!id)throw new Error('文档地址缺少 ID，请从知识库重新打开。');
-    if(!currentNote&&!force){
-      const preview=await readerPreview(),note=preview?.data.notes?.find(item=>item.id===id);
+    {
+      const preview=await readerPreview({refresh:Boolean(currentNote)||pendingPreview}),note=preview?.data.notes?.find(item=>item.id===id);
       // Text can be shown from the trusted opener without waiting for GitHub.
       // Attachments still need authenticated integrity-checked bytes before rendering.
-      if(note&&!note.attachment){
+      if(note&&(!note.attachment||preview.pendingSync)){
         applyTheme(preview.data.settings.theme,preview.data.settings.design);
-        await render(note,preview,ticket);signature=JSON.stringify([note,preview.data.tasks.find(item=>item.id===note.taskId)?.title]);
+        const next=JSON.stringify([note,preview.data.tasks.find(item=>item.id===note.taskId)?.title]);
+        if(next!==signature){await render(note,preview,ticket);signature=next;}
         storageNotice('已显示当前会话内容，正在核对云端版本…');
       }
+      if(preview?.pendingSync){
+        pendingPreview=true;revision=undefined;
+        if(!note){currentNote=null;signature=undefined;downloadButton.hidden=editLink.hidden=true;status('文档已在主页面移除','删除操作正在后台同步。');}
+        else storageNotice(preview.syncError?'当前文档尚未上传：'+preview.syncError:'已显示当前页面的待同步内容，正在等待后台上传…');
+        if(document.visibilityState==='visible'&&window.opener&&!window.opener.closed)previewTimer=setTimeout(()=>void load(),1500);
+        return;
+      }
+      if(pendingPreview&&!preview){storageNotice('主页面已关闭或无法连接，保留未同步内容；请下载文档保存草稿。');return;}
+      pendingPreview=false;
     }
     const state=await readWorkspace({archives:false});
     applyTheme(state.data.settings.theme,state.data.settings.design);
@@ -126,6 +138,6 @@ async function load(force = false) {
 }
 downloadButton.addEventListener('click',download);
 window.addEventListener('focus',()=>load());
-window.addEventListener('pagehide',()=>{cleanupPreview?.();cleanupPreview=undefined;});
+window.addEventListener('pagehide',()=>{clearTimeout(previewTimer);cleanupPreview?.();cleanupPreview=undefined;});
 window.addEventListener('pageshow',event=>{if(event.persisted)void load(true);});
 await load();

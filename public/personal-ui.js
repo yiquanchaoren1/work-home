@@ -1,6 +1,6 @@
 import { entryKinds,entryStates,journalFields,personalData,dayKey,buildPersonalDocument } from './personal.js';
 import { createId } from './store.js?v=themes-20261017';
-import { readPersonalDocument, attachmentUrl } from './local-api.js?v=perf-20261018';
+import { readPersonalDocument, attachmentUrl } from './local-api.js?v=sync-20261018';
 import { markdownExcerpt } from './markdown.js';
 import { renderArchiveTimeline } from './studio-archives.js';
 
@@ -116,7 +116,7 @@ export function createPersonalUI(ctx) {
     if(name==='journal-add-activity'){const input=$('#personal-journal-form [name="work"]');input.value+=(input.value?'\n':'')+'待核实线索：'+el.dataset.text;ctx.dirty(true);}
     if(name==='personal-delete'||name==='journal-delete')showModal('确认删除',`<p>删除此条档案或每日记录及其修订历史。来源文档和已有备份仍保留，可分别管理。</p>`,action(name+'-confirm','确定删除',id,'danger')+`<button class="button secondary" data-action="close">取消</button>`);
     if(name==='personal-delete-confirm'||name==='journal-delete-confirm'){await commit(next=>{const key=name.startsWith('personal-')?'entries':'journals';next.personal[key]=next.personal[key].filter(e=>e.id!==id);},'删除了一条个人记录');$('#modal').close();}
-    if(name==='archive-download'||name==='archive-copy'){const document=await readPersonalDocument();if(document.warning)toast(document.warning,true);if(name==='archive-download')download('我的个人主档案.md',document.markdown,'text/markdown;charset=utf-8');else {await navigator.clipboard.writeText(document.markdown);toast('完整主档案已复制');}}
+    if(name==='archive-download'||name==='archive-copy'){await ctx.beforeRemoteRead?.();const document=await readPersonalDocument();if(document.warning)toast(document.warning,true);if(name==='archive-download')download('我的个人主档案.md',document.markdown,'text/markdown;charset=utf-8');else {await navigator.clipboard.writeText(document.markdown);toast('完整主档案已复制');}}
     if(name==='archive-context')showModal('准备给 AI 的上下文',`<label class="field">本次希望 AI 完成什么<textarea id="archive-request" rows="4" placeholder="例如：按照我的表达偏好，整理今天的工作总结"></textarea></label><label class="field">使用范围<select id="archive-scope"><option value="compact">精简：已确认档案、当前事项、最近7篇记录</option><option value="full">完整：含资料、待确认项与全部历史（状态会标明）</option></select></label><p class="hint">只在本机准备文本，不会发送给外部模型。请按目标 AI 的上下文容量选择范围。</p><p class="form-error" id="form-error" role="alert"></p>`,action('archive-generate','生成上下文','','primary'),true);
     if(name==='archive-generate'){const request=$('#archive-request').value;if(!request.trim())throw new Error('请先填写本次需求');const text=buildPersonalDocument(data(),{compact:$('#archive-scope').value==='compact',request});showModal('AI 上下文已准备',`<p class="hint">可复制或下载后交给你选择的 AI；这是输入材料，不是 AI 答复。</p><textarea class="master-document" id="archive-result" aria-label="AI 上下文" readonly>${esc(text)}</textarea>`,action('archive-result-copy','复制上下文')+action('archive-result-download','下载上下文','','primary'),true);}
     if(name==='archive-result-copy'){await navigator.clipboard.writeText($('#archive-result').value);toast('上下文已复制');}

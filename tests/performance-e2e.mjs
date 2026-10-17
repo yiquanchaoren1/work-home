@@ -77,14 +77,16 @@ try{
     measurements.push({operation:'theme-save',perRequestMs:latency,paintMs:paint,totalMs:Date.now()-start,requests:operation.length});
   });
 
-  await check('failed theme preview rolls back without claiming success or changing stored work',async()=>{
+  await check('failed background theme saves retain an explicit draft without claiming cloud success',async()=>{
     const before=Buffer.from(files.get('workspace.json').bytes);failWrites=true;
     await page.locator('#theme-picker-button').click();await page.locator('#modal [data-design-id="gallery"]').click();
     await page.waitForFunction(()=>document.documentElement.dataset.design==='gallery');
     assert.equal(await page.locator('body').getAttribute('data-saving'),'true');
-    await settle(page);await page.locator('#modal').getByText(/GitHub 操作失败/).waitFor();
-    assert.equal(await page.locator('html').getAttribute('data-design'),'experimental');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
-    assert.deepEqual(files.get('workspace.json').bytes,before);failWrites=false;await page.keyboard.press('Escape');
+    await page.locator('#background-sync.is-error').getByText(/GitHub 操作失败/).waitFor();
+    assert.equal(await page.locator('html').getAttribute('data-design'),'gallery');
+    assert.deepEqual(files.get('workspace.json').bytes,before);failWrites=false;
+    page.once('dialog',dialog=>dialog.accept());await page.locator('#background-sync [data-sync-action="discard"]').click();await settle(page);
+    assert.equal(await page.locator('html').getAttribute('data-design'),'experimental');
   });
 
   await check('text reader paints shared content before GitHub replies and never loads unrelated archives',async()=>{
@@ -111,7 +113,7 @@ try{
     await reader.close();latency=0;await quiet();
   });
 
-  await check('task status updates visibly during a save; concurrent edits retain the typed form and never overwrite',async()=>{
+  await check('task status updates during a save; concurrent edits retain a local draft and never overwrite',async()=>{
     await page.evaluate(()=>location.hash='tasks');const id=state().tasks[0].id;
     latency=350;const offset=calls.length,start=Date.now();
     await page.locator(`[data-task-status="${id}"]`).first().selectOption('进行中');
@@ -123,8 +125,8 @@ try{
     await page.locator(`#modal [data-action="edit"][data-collection="tasks"][data-id="${id}"]`).click();
     await page.locator('#editor-form [name="title"]').fill('需要保留的未保存修改');
     const other=JSON.parse(files.get('workspace.json').bytes);other.revision='other-device';other.data.settings.name='其他设备保存的名称';install('workspace.json',other);
-    await page.locator('button[form="editor-form"]').click();await page.locator('#modal').getByText(/其他设备已更新/).waitFor();
-    assert.equal(await page.locator('#editor-form [name="title"]').inputValue(),'需要保留的未保存修改');
+    await page.locator('button[form="editor-form"]').click();await page.locator('#modal').waitFor({state:'hidden'});await page.locator('#background-sync').getByText(/其他设备已更新/).waitFor();
+    assert.ok(await page.locator('#content').getByText('需要保留的未保存修改',{exact:true}).count());
     assert.equal(state().settings.name,'其他设备保存的名称');assert.notEqual(state().tasks[0].title,'需要保留的未保存修改');
     assert.equal(await page.evaluate(()=>localStorage.length+sessionStorage.length),0);assert.deepEqual(await context.cookies(),[]);assert.deepEqual(errors,[]);
     await page.screenshot({path:'artifacts/performance-conflict.png'});
