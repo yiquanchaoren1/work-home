@@ -41,6 +41,8 @@ const modal = $('#modal');
 let data = {...structuredClone(seedData), tasks:[],links:[],notes:[],records:[],activity:[]}, revision, dataDir = '', loadError = '', migrationWarning = '', diskWarning = '', busy = false, initializing = false, filter = '', query = '', importCandidates = [], importDraft = '', importFileFormat = '', restoreCandidate = null;
 let noteDirty = false, previewTimer, documentDrafts = [], documentSelectedFiles = [], documentImageFiles = [], documentImportGeneration = 0;
 let lastView='',commandIndex=-1;
+// Keep task-list navigation context in this page's memory, separate from other lists.
+let taskListView={filter:'',query:''};
 let masterPath='',codexDir='',codexWorkspace='',documentUploadReturn='notes';
 let archiveStatus={},reloading=false,appearanceSupported=false;
 let undoAction=null;
@@ -632,7 +634,13 @@ function openEditRoute() {
   history.replaceState(null,'','#notes');
 }
 window.addEventListener('beforeunload',event=>{if(noteDirty||busy||background?.pending){event.preventDefault();event.returnValue='';}});
-window.addEventListener('hashchange',()=>{filter='';query='';document.body.classList.remove('menu-open');render();openEditRoute();window.scrollTo(0,0);if(['archives','profile','journal','portable'].includes(route().page))void reloadWorkspace(true);});
+window.addEventListener('hashchange',()=>{
+  if(document.body.dataset.page==='tasks')taskListView={filter,query};
+  const view=route().page==='tasks'?taskListView:{filter:'',query:''};
+  filter=view.filter;query=view.query;
+  document.body.classList.remove('menu-open');render();openEditRoute();window.scrollTo(0,0);
+  if(['archives','profile','journal','portable'].includes(route().page))void reloadWorkspace(true);
+});
 window.addEventListener('focus',()=>{if(!modal.open)void reloadWorkspace(true);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void reloadWorkspace(true);});
 setInterval(()=>{if(document.visibilityState==='visible')void reloadWorkspace(true);},60000);
