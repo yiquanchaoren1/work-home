@@ -2,6 +2,7 @@ import { renderMarkdown } from './markdown.js';
 import { readWorkspace, attachmentUrl, cloudMode, readerPreview } from './local-api.js?v=sync2-20261018';
 import { mountPdf } from './pdf-viewer.js';
 import { applyTheme } from './ui-effects.js?v=themes-20261017';
+import { mountDocumentToc } from './document-toc.js';
 
 const root = document.querySelector('#reader');
 const downloadButton = document.querySelector('#document-download');
@@ -89,6 +90,7 @@ async function render(note, state, ticket) {
   editLink.href=`./#notes/edit/${encodeURIComponent(note.id)}`;editLink.textContent=note.attachment?'编辑说明':'编辑文档';editLink.hidden=false;
   downloadButton.textContent=note.attachment?'下载原文件':note.format==='markdown'?'下载 .md':'下载 .txt';downloadButton.hidden=false;
   root.replaceChildren(paper);
+  if(!note.attachment&&note.format==='markdown')cleanupPreview=mountDocumentToc(root,paper,content);
 }
 async function load(force = false) {
   if(loading)return;loading=true;const ticket=++generation;

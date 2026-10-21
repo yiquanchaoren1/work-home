@@ -1,0 +1,18 @@
+.document-page .reader-shell.reader-with-toc { max-width: 1440px; }
+.reader-layout { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 24px; align-items: start; }
+.reader-toc { position: sticky; top: var(--reader-toc-offset, 104px); min-width: 0; border: 1px solid var(--border); border-radius: var(--radius, 8px); background: var(--surface); color: var(--ink); }
+.reader-toc-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; cursor: pointer; font-size: 13px; font-weight: 600; list-style: none; }
+.reader-toc-summary::-webkit-details-marker { display: none; }
+.reader-toc-summary::after { content: '+'; font-size: 16px; color: var(--muted); }
+.reader-toc[open] > .reader-toc-summary::after { content: '−'; }
+.reader-toc-count { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--muted); }
+.reader-toc-nav { overflow-y: auto; max-height: calc(100dvh - var(--reader-toc-offset, 104px) - 80px); padding: 0 8px 12px; scrollbar-width: thin; overscroll-behavior: contain; }
+.reader-toc-list { list-style: none; padding: 0; margin: 0; }
+.reader-toc-item { margin: 0; padding: 0; }
+.reader-toc-link { display: block; padding: 8px 10px 8px calc(10px + var(--toc-depth, 0) * 12px); border-left: 2px solid transparent; color: var(--muted); font-size: 12px; line-height: 1.6; text-decoration: none; overflow-wrap: anywhere; }
+.reader-toc-link:hover { color: var(--primary); background: var(--surface-soft); }
+.reader-toc-link[aria-current] { border-left-color: var(--primary); color: var(--primary); background: var(--primary-soft); font-weight: 600; }
+.reader-toc-link:focus-visible, .reader-toc-summary:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.reader-heading { scroll-margin-top: calc(var(--reader-toc-offset, 104px) + 8px); }
+@media (max-width: 1100px) and (min-width: 901px) { .reader-layout { grid-template-columns: minmax(0, 1fr) 210px; gap: 16px; } .reader-with-toc .reader-paper { padding: 36px; } }
+@media (max-width: 900px) { .reader-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; } .reader-toc { position: static; order: -1; } .reader-toc-nav { max-height: 42dvh; } }
