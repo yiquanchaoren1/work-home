@@ -11,6 +11,7 @@ import { installAppPanel } from './install-app.js';
 import { cloudConnectionPanel,refreshConnectionPanel,setPendingSyncCheck,reconnectGithubSession } from './cloud-session.js?v=sync2-20261018';
 import { renderStudioDashboard } from './studio-dashboard.js?v=themes-20261017';
 import {designFor,designs,themeChoices} from './appearance.js?v=themes-20261017';
+import { installDocumentDrop } from './document-drop.js';
 
 const $ = (s, root = document) => root.querySelector(s);
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -216,7 +217,7 @@ function toolbar(filters,placeholder) { return `<div class="toolbar"><div class=
 function listPage(page) {
   if(page==='tasks') return pageHeader('MAKE PROGRESS','工作事项','拖动卡片左上角的手柄调整顺序；也可以用方向键排序。顺序会保存到本机。',addButton('tasks','新建事项'))+toolbar(['进行中','待开始','等待反馈','已完成','暂缓','资料归档'],'查找事项')+`<div class="card-grid" id="sortable-tasks">${filtered(data.tasks,'status').map(t=>taskCard(t,true)).join('') || empty('这里还没有事项','试试其他筛选，或新建一件工作。','new-task','新建事项')}</div>`;
   if(page==='links') return pageHeader('EVERYTHING CONNECTED','链接库','工作中用到的入口，都有一个好找的位置。',importButton()+addButton('links','添加链接'))+toolbar([...new Set(data.links.map(l=>l.category))],'搜索标题、用途、标签')+`<div class="card-grid">${filtered(data.links,'category').map(linkCard).join('') || empty('收下你的第一个工作链接','支持批量粘贴、浏览器书签和 CSV 文件导入。','import','导入链接')}</div>`;
-  if(page==='notes') return pageHeader('BUILD YOUR KNOWLEDGE','知识库','文档保存在本机文件夹，点击卡片在新标签页阅读。',`<button class="button secondary" data-action="upload-documents">${icon('upload')}上传文档</button>`+addButton('notes','新建文档'))+toolbar([...new Set(data.notes.map(n=>n.category))],'搜索文档、标签')+`<div class="note-grid">${filtered(data.notes,'category').map(noteCard).join('') || empty('还没有相关文档','上传 Markdown、PDF、文本或图片，或直接开始写作。','new-note','新建文档')}</div>`;
+  if(page==='notes') return pageHeader('BUILD YOUR KNOWLEDGE','知识库','把文件拖入此页面，或点击上传文档；点击卡片在新标签页阅读。',`<button class="button secondary" data-action="upload-documents">${icon('upload')}上传文档</button>`+addButton('notes','新建文档'))+toolbar([...new Set(data.notes.map(n=>n.category))],'搜索文档、标签')+`<div class="note-grid">${filtered(data.notes,'category').map(noteCard).join('') || empty('还没有相关文档','上传 Markdown、PDF、文本或图片，或直接开始写作。','new-note','新建文档')}</div>`;
 }
 function detail(id) {
   const t = data.tasks.find(x=>x.id===id);
@@ -327,8 +328,18 @@ async function readImages(files) {
 function startDocumentUpload(defaultCategory='其他',returnPage='notes') {
   documentUploadReturn=returnPage;
   documentDrafts=[];documentSelectedFiles=[];documentImageFiles=[];documentImportGeneration++;
-  showModal('上传文档',`<div class="document-import"><p class="muted">支持 Typora 的 Markdown、PDF、文本和图片。文件存入本机文件夹，点击卡片后在独立标签页查看。</p><label class="upload-zone field">文档或图片（可多选）<input id="document-files" type="file" multiple></label><div class="form-grid"><label class="field">可选：Markdown 中的本地图片<input id="document-assets" type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple></label><label class="field">或选择整个文档文件夹<input id="document-folder" type="file" webkitdirectory multiple></label>${selectField('统一分类','document-category',opts(noteCategories,defaultCategory))}${selectField('关联事项','document-task',taskOptions())}</div><p class="hint">Markdown 可直接编辑；PDF、文本和图片保留原文件。其他格式可以保存和下载。每篇 Markdown 不超过 2 MB，其他单文件不超过 50 MB，正文图片总计不超过 20 MB。文件夹中的图片会用于补齐 Markdown 引用。</p><div id="document-upload-preview" class="document-list"></div><p class="form-error" id="form-error" role="alert"></p></div>`,`<button class="button secondary" data-action="close">取消</button><button class="button primary" data-action="confirm-documents" disabled>导入文档</button>`,true);
+  showModal('上传文档',`<div class="document-import"><p class="muted">支持 Typora 的 Markdown、PDF、文本和图片。文件存入本机文件夹，点击卡片后在独立标签页查看。</p><label class="upload-zone field"><span class="document-drop-hint">将文档拖到这里，或点击选择文件</span><small>支持多个文档和图片；预览后确认导入</small><input id="document-files" type="file" multiple></label><div class="form-grid"><label class="field">可选：Markdown 中的本地图片<input id="document-assets" type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple></label><label class="field">或选择整个文档文件夹<input id="document-folder" type="file" webkitdirectory multiple></label>${selectField('统一分类','document-category',opts(noteCategories,defaultCategory))}${selectField('关联事项','document-task',taskOptions())}</div><p class="hint">Markdown 可直接编辑；PDF、文本和图片保留原文件。其他格式可以保存和下载。每篇 Markdown 不超过 2 MB，其他单文件不超过 50 MB，正文图片总计不超过 20 MB。文件夹中的图片会用于补齐 Markdown 引用。</p><div id="document-upload-preview" class="document-list"></div><p class="form-error" id="form-error" role="alert"></p></div>`,`<button class="button secondary" data-action="close">取消</button><button class="button primary" data-action="confirm-documents" disabled>导入文档</button>`,true);
 }
+installDocumentDrop({
+  document,pageEnabled:()=>route().page==='notes',blocked:()=>busy||!!loadError,
+  onFiles:async files=>{
+    if(!modal.open)startDocumentUpload();
+    documentSelectedFiles=files;
+    const input=$('#document-files');if(input)input.value='';
+    await prepareDocuments(documentSelectedFiles);
+  },
+  onWarning:message=>{const error=$('#form-error',modal);if(modal.open&&error)error.textContent=message;else toast(message);}
+});
 async function prepareDocuments(files,images=documentImageFiles) {
   const generation=++documentImportGeneration,button=$('[data-action="confirm-documents"]'),preview=$('#document-upload-preview');
   button.disabled=true;documentDrafts=[];preview.textContent='正在读取文档……';$('#form-error').textContent='';

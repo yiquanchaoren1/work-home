@@ -1,0 +1,9 @@
+.upload-zone.document-drop-active {
+  outline: 2px dashed var(--accent, #b15135);
+  outline-offset: 4px;
+}
+#content.document-drop-active {
+  outline: 2px dashed var(--accent, #b15135);
+  outline-offset: -5px;
+}
+.document-drop-hint { font-weight: 600; }
