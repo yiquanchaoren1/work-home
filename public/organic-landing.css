@@ -1,0 +1,86 @@
+/* A full-width, quiet first screen inspired by the supplied showcase composition.
+   Scope is limited to the natural theme's homepage; existing work routes remain. */
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] .sidebar,
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] .topbar,
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] .sidebar-scrim,
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] .mobile-navigation {display:none!important}
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] .main-shell {margin-left:0!important;width:100%}
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] main#content {max-width:none;width:100%;padding:0;margin:0}
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] {--landing-clay:#efddca;--landing-sage:#e1e5d8;--landing-linen:#eae1d6;--landing-green:#788b64}
+html[data-design="experimental"][data-theme="dark"] body[data-page="dashboard"] {--landing-clay:#4b3b2e;--landing-sage:#3b4434;--landing-linen:#413c32;--landing-green:#bac99f}
+.organic-landing-nav {position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:82px;padding:16px max(32px,calc((100vw - 1320px)/2));border-bottom:1px solid var(--border);background:var(--bg)}
+.organic-wordmark {display:inline-flex;align-items:center;gap:10px;color:var(--primary);white-space:nowrap;font:500 20px/1.4 Georgia,"Songti SC",SimSun,serif}
+.organic-wordmark>svg {width:19px;height:22px;color:var(--accent)}
+.organic-wordmark em {font-style:normal;color:var(--accent)}
+.organic-entry-links {display:flex;align-items:center;gap:34px}
+.organic-entry-links>a {display:flex;align-items:center;min-height:44px;font-size:14px;color:var(--muted);transition:color .6s ease-in-out}
+.organic-entry-links>a:hover {color:var(--primary-hover)}
+.organic-landing-tools {display:flex;align-items:center;gap:8px}
+html[data-design="experimental"][data-theme] .organic-landing-tools>.icon-button {width:44px;height:44px;min-width:44px;border:1px solid var(--border);color:var(--primary)}
+.organic-landing {position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:calc(100svh - 130px);padding:96px 24px 98px;background:var(--bg)}
+.organic-landing-copy {position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:850px;width:100%;margin-inline:auto}
+.organic-welcome-label {display:inline-flex;align-items:center;gap:10px;min-height:38px;padding:8px 22px;margin:0 0 28px;background:var(--landing-linen);border-radius:26px 31px 24px 29px;color:var(--primary);font:13px/1.6 "Microsoft YaHei",sans-serif;letter-spacing:2px}
+.organic-welcome-label>svg {width:15px;height:18px;color:var(--accent)}
+html[data-design="experimental"][data-theme] .organic-landing h1 {position:relative;margin:0;font:600 clamp(88px,10.2vw,156px)/.99 Georgia,"Times New Roman",serif;letter-spacing:-7px;color:var(--primary);overflow-wrap:normal}
+html[data-design="experimental"][data-theme] .organic-landing h1>span {display:block;color:var(--landing-green);font-style:normal;font-weight:600;margin-top:10px}
+.organic-introduction {font:17px/1.9 "Songti SC",SimSun,Georgia,serif;letter-spacing:1px;max-width:600px;margin:32px auto 0;color:var(--muted)}
+html[data-design="experimental"][data-theme] .organic-entry-actions {display:flex;align-items:center;justify-content:center;gap:18px;margin-top:40px}
+html[data-design="experimental"][data-theme] .organic-entry-actions>.button {min-width:184px;min-height:54px;padding:15px 28px;font-size:14px;gap:10px;border-radius:29px 35px 27px 32px}
+.organic-entry-actions svg {width:18px;height:18px}
+.organic-blob {position:absolute;z-index:0;pointer-events:none}
+.organic-blob-clay {width:490px;height:490px;background:var(--landing-clay);right:-265px;top:16px;border-radius:61% 39% 43% 57% / 56% 45% 55% 44%;transform:rotate(12deg)}
+.organic-blob-sage {width:420px;height:380px;background:var(--landing-sage);left:-240px;bottom:-185px;border-radius:39% 61% 54% 46% / 49% 43% 57% 51%;transform:rotate(-22deg)}
+.organic-blob-linen {width:220px;height:240px;left:calc(50% - 260px);top:calc(50% - 125px);background:var(--landing-linen);border-radius:57% 43% 38% 62% / 37% 55% 45% 63%;transform:rotate(-13deg);opacity:.5}
+.organic-leaf {position:absolute;z-index:0;color:var(--accent);pointer-events:none;opacity:.4}
+.organic-leaf>svg {width:32px;height:37px}
+.organic-leaf-one {top:19%;right:9%;transform:rotate(15deg)}
+.organic-leaf-two {top:31%;left:7%;transform:rotate(70deg);color:var(--tan)}
+.organic-scroll-cue {position:absolute;z-index:1;bottom:22px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;font:11px/1.8 "Songti SC",SimSun,serif;letter-spacing:1px;color:var(--muted);white-space:nowrap}
+.organic-scroll-cue>svg {width:13px;height:13px;transform:rotate(90deg)}
+html[data-design="experimental"][data-theme] .organic-workspace-content {width:100%;max-width:1224px;padding:0 36px 64px;margin:0 auto}
+html[data-design="experimental"][data-theme] .organic-workspace-content .gallery-ledger {margin-top:0;margin-bottom:72px;gap:24px}
+html[data-design="experimental"][data-theme] .organic-workspace-content .gallery-ledger .stat-card {min-height:116px;padding:26px!important;border-radius:48% 52% 46% 54% / 44% 50% 50% 56%;align-items:center;justify-content:center;gap:8px}
+html[data-design="experimental"][data-theme] .organic-workspace-content .gallery-ledger .stat-arrow {display:none}
+html[data-design="experimental"][data-theme] .organic-workspace-content .gallery-ledger .stat-number {order:-1;font-size:36px}
+html[data-design="experimental"][data-theme] body[data-page="dashboard"] .page-footer {max-width:1224px;margin:0 auto;padding:24px 36px}
+@media(min-width:1600px){
+ .organic-blob-clay {width:620px;height:550px;right:-260px;top:28px}
+ .organic-blob-sage {width:540px;height:460px;left:-250px;bottom:-225px}
+}
+@media(max-width:1000px){
+ .organic-landing-nav {padding:14px 26px;gap:20px;min-height:76px}
+ .organic-entry-links {gap:22px}
+ .organic-entry-links>a {font-size:12px}
+ .organic-landing {min-height:calc(100svh - 120px);padding-top:90px;padding-bottom:90px}
+ .organic-blob-clay {right:-330px}
+ .organic-blob-linen {left:calc(50% - 210px);width:180px;height:215px}
+}
+@media(max-width:700px){
+ .organic-landing-nav {padding:12px 20px;min-height:72px;gap:12px}
+ .organic-wordmark {font-size:19px;gap:8px}
+ .organic-entry-links {display:none}
+ .organic-landing-tools {gap:6px}
+ .organic-landing {min-height:calc(100svh - 112px);padding:70px 22px 90px}
+ html[data-design="experimental"][data-theme] .organic-landing h1 {font-size:clamp(76px,19.5vw,115px);letter-spacing:-4px;line-height:1.03}
+ .organic-welcome-label {font-size:11px;letter-spacing:1px;padding:7px 16px;margin-bottom:28px}
+ .organic-introduction {font-size:14px;line-height:2;letter-spacing:.3px;margin-top:28px;max-width:320px}
+ html[data-design="experimental"][data-theme] .organic-entry-actions {gap:12px;margin-top:32px;width:100%}
+ html[data-design="experimental"][data-theme] .organic-entry-actions>.button {min-width:0;min-height:52px;padding:13px 20px;font-size:12px;white-space:nowrap}
+ .organic-blob-clay {width:350px;height:370px;right:-277px;top:45px}
+ .organic-blob-sage {width:300px;height:250px;left:-220px;bottom:-100px}
+ .organic-blob-linen {width:150px;height:180px;left:calc(50% - 146px);top:calc(50% - 86px);opacity:.45}
+ .organic-leaf-one {right:8%;top:14%}
+ .organic-leaf-two {left:4%;top:42%}
+ .organic-leaf>svg {width:20px;height:25px}
+ html[data-design="experimental"][data-theme] .organic-workspace-content {padding:0 20px 48px}
+ html[data-design="experimental"][data-theme] .organic-workspace-content .gallery-ledger {gap:14px;margin-bottom:48px}
+ html[data-design="experimental"][data-theme] .organic-workspace-content .gallery-ledger .stat-card {min-height:110px;padding:20px!important}
+ html[data-design="experimental"][data-theme] body[data-page="dashboard"] .page-footer {padding-inline:20px}
+}
+@media(max-height:720px) and (min-width:701px){
+ .organic-landing {padding:48px 24px 70px}
+ html[data-design="experimental"][data-theme] .organic-landing h1 {font-size:96px}
+ .organic-welcome-label {margin-bottom:20px}
+ .organic-introduction {margin-top:24px}
+ html[data-design="experimental"][data-theme] .organic-entry-actions {margin-top:28px}
+}

@@ -9,7 +9,7 @@ import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
 import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=organic-20261022';
 import { installAppPanel } from './install-app.js';
 import { cloudConnectionPanel,refreshConnectionPanel,setPendingSyncCheck,reconnectGithubSession } from './cloud-session.js?v=sync2-20261018';
-import { renderStudioDashboard } from './studio-dashboard.js?v=organic-20261022';
+import { renderStudioDashboard } from './studio-dashboard.js?v=landing-20261022';
 import {designFor,designs,themeChoices} from './appearance.js?v=organic-20261022';
 import { installDocumentDrop } from './document-drop.js';
 
@@ -492,7 +492,7 @@ document.addEventListener('click',async event=>{
       const preset=designs.find(item=>item.id===el.dataset.designId);if(!preset)throw new Error('主题不存在');
       const fromPicker=modal.open&&modal.classList.contains('appearance-modal');
       if(designFor(data.settings.design).id!==preset.id||data.settings.theme!==preset.mode)await commit(next=>{next.settings.design=preset.id;next.settings.theme=preset.mode;},undefined,{preview:true});
-      if(fromPicker){modal.close();$('#theme-picker-button')?.focus();}else document.querySelector(`[data-design-id="${preset.id}"]`)?.focus();
+      if(fromPicker){modal.close();(document.querySelector('.organic-landing-tools [data-action="theme-picker"]')||$('#theme-picker-button'))?.focus();}else document.querySelector(`[data-design-id="${preset.id}"]`)?.focus();
       toast(`已切换为${preset.label}`);return;
     }
     if(action==='theme-toggle'){
