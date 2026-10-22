@@ -1,7 +1,7 @@
 // Persisted appearance choices are independent of the work collections.
 export const designs = [
   {id:'paper',label:'A 私人刊物',description:'纸白、朱红与杂志式排版',mode:'light',color:'#f3efe6',night:'#22211f'},
-  {id:'experimental',label:'B 实验工作室',description:'荧光黄绿、大字与几何拼贴',mode:'dark',color:'#f2f1e9',night:'#171719'},
+  {id:'experimental',label:'B 自然有机风',description:'暖米、鼠尾草绿、纸张与植物',mode:'light',color:'#faf6f1',night:'#2c2a25'},
   {id:'gallery',label:'C 安静画廊',description:'暖白、灰蓝与安静的留白',mode:'light',color:'#f8f8f4',night:'#19232b'},
   {id:'porcelain',label:'古风水墨',description:'瓷白、墨黑、朱印与山水',mode:'light',color:'#f8f9f5',night:'#181e19'},
 ];

@@ -6,11 +6,11 @@ import { BackgroundSync } from './background-sync.js?v=sync2-20261018';
 import { createPersonalUI } from './personal-ui.js?v=sync2-20261018';
 import { personalData,dayKey } from './personal.js';
 import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
-import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=themes-20261017';
+import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=organic-20261022';
 import { installAppPanel } from './install-app.js';
 import { cloudConnectionPanel,refreshConnectionPanel,setPendingSyncCheck,reconnectGithubSession } from './cloud-session.js?v=sync2-20261018';
-import { renderStudioDashboard } from './studio-dashboard.js?v=stylekit-20261022';
-import {designFor,designs,themeChoices} from './appearance.js?v=themes-20261017';
+import { renderStudioDashboard } from './studio-dashboard.js?v=organic-20261022';
+import {designFor,designs,themeChoices} from './appearance.js?v=organic-20261022';
 import { installDocumentDrop } from './document-drop.js';
 
 const $ = (s, root = document) => root.querySelector(s);

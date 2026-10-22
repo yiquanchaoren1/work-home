@@ -1,7 +1,7 @@
 import { renderMarkdown } from './markdown.js';
 import { readWorkspace, attachmentUrl, cloudMode, readerPreview } from './local-api.js?v=sync2-20261018';
 import { mountPdf } from './pdf-viewer.js';
-import { applyTheme } from './ui-effects.js?v=themes-20261017';
+import { applyTheme } from './ui-effects.js?v=organic-20261022';
 import { mountDocumentToc } from './document-toc.js';
 
 const root = document.querySelector('#reader');

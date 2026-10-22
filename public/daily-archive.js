@@ -1,7 +1,7 @@
 import {readWorkspace,readerPreview} from './local-api.js?v=sync2-20261018';
 import {renderMarkdown} from './markdown.js';
 import {archiveDocumentKinds} from './archive-documents.js';
-import {applyTheme} from './ui-effects.js?v=themes-20261017';
+import {applyTheme} from './ui-effects.js?v=organic-20261022';
 import {dayKey} from './personal.js';
 
 const reader=document.querySelector('#reader'),button=document.querySelector('#summary-download');
