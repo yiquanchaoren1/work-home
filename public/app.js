@@ -186,7 +186,7 @@ const addButton = (collection,label) => `<button class="button primary" data-act
 const importButton = () => `<button class="button secondary" data-action="import">${icon('upload')}导入链接</button>`;
 function menu() {
   const p = route().page === 'detail' ? 'tasks' : ['profile','journal','portable'].includes(route().page)?'archives':route().page;
-  $('#navigation').innerHTML = [['dashboard','grid'],['tasks','task'],['links','link'],['notes','book'],['activity','clock'],['archives','folder']].map(([key,ico])=>`<a href="#${key}" class="nav-item ${p===key?'active':''}" title="${labels[key]}" aria-label="${labels[key]}" ${p===key?'aria-current="page"':''}>${icon(ico)}<span>${labels[key]}</span>${key!=='activity'&&data[key]?`<span class="nav-count">${data[key].length}</span>`:''}</a>`).join('');
+  $('#navigation').innerHTML = [['dashboard','grid'],['tasks','task'],['links','link'],['notes','book'],['activity','clock'],['archives','folder']].map(([key,ico])=>`<a href="#${key}" class="nav-item ${p===key?'active':''}" title="${labels[key]}" aria-label="${labels[key]}" ${p===key?'aria-current="page"':''}>${icon(ico)}<span>${labels[key]}</span>${key!=='activity'&&data[key]?`<span class="nav-count">${data[key].length}</span>`:''}</a>`).join('') + `<a href="https://yiquanchaoren1.github.io/" class="nav-item" target="_blank" rel="noopener noreferrer" title="旧博客（在新标签页打开）" aria-label="旧博客（在新标签页打开）">${icon('book')}<span>旧博客 ↗</span></a>`;
   $('#breadcrumb-title').textContent = labels[route().page] || '工作台';
   $('#workspace-name').textContent = data.settings.name;
   const mobilePage=p==='links'?'notes':p==='activity'?'dashboard':p;
