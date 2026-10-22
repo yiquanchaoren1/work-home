@@ -1,0 +1,187 @@
+/* A working archive: editorial hierarchy, collected objects and generous cards.
+   Visual research: StyleKit editorial-profile-archive. Original implementation. */
+html[data-design] {
+ --atelier-radius: 16px;
+ --art-base:#4263e8;--art-side:#253da8;--art-shadow:#202744;
+ --art-paper:#f8f7ef;--art-paper-edge:#c9c8bc;--art-fold:#dfded4;
+ --art-highlight:#dcf276;--art-highlight-side:#a6bb4d;--art-highlight-edge:#c2d569;
+ --art-ink:#252721;--art-accent:#f195a6;
+}
+html[data-design="paper"] {--art-base:#b9523d;--art-side:#843e30;--art-shadow:#5d342c;--art-accent:#8badd1;--art-highlight:#f3cf75;--art-highlight-side:#c3a24e;--art-highlight-edge:#dbc070}
+html[data-design="gallery"] {--art-base:#6382b1;--art-side:#3b547b;--art-shadow:#293953;--art-highlight:#e6b17d;--art-highlight-side:#bb8558;--art-highlight-edge:#d49a66;--art-accent:#a8bdae}
+html[data-design="porcelain"] {--art-base:#6b7b63;--art-side:#46523e;--art-shadow:#293329;--art-highlight:#e6d8ab;--art-highlight-side:#b5a77b;--art-highlight-edge:#cebf91;--art-accent:#b45b4b}
+html[data-design] body {background:var(--bg)}
+html[data-design] .sidebar {width:216px;padding:32px 18px 22px;border-right:1px solid var(--border)}
+html[data-design] .brand {gap:12px;align-items:center;padding:0 6px 35px}
+html[data-design] .brand-mark {width:38px;height:42px;flex-shrink:0;outline:none;border-radius:9px;transform:rotate(-5deg);font:bold 20px/1 Georgia,serif;background:var(--primary);color:var(--bg);border:none}
+html[data-design] .brand-title {font:600 21px/1.15 Georgia,"Microsoft YaHei",serif;letter-spacing:-.7px;white-space:normal}
+html[data-design] .brand-caption {font:8px/1.5 Consolas,monospace;letter-spacing:.4px;margin-top:7px}
+html[data-design] .nav-label {padding-inline:8px;margin-bottom:15px;font-size:9px;letter-spacing:2px}
+html[data-design] .nav-list {gap:5px;counter-reset:rooms}
+html[data-design] .nav-item {padding:12px 10px;min-height:46px;border-radius:9px;position:relative;gap:11px;font-size:13px;transition:background .18s,color .18s,transform .18s}
+html[data-design] .nav-item.active {background:var(--primary-soft);color:var(--primary);font-weight:600}
+html[data-design] .nav-item.active::before {display:none}
+html[data-design] .nav-item:hover {background:var(--surface-soft);transform:translateX(3px)}
+html[data-design] .nav-item .nav-count {font:10px/1.5 Consolas,monospace}
+html[data-design] .sidebar-tip {padding:22px 8px;border-top:1px solid var(--border)}
+html[data-design] .sidebar-tip .eyebrow {font:11px/1.8 "Microsoft YaHei",sans-serif;letter-spacing:1px}
+html[data-design] .sidebar-tip p {font:10px/1.8 "Microsoft YaHei",sans-serif;letter-spacing:0}
+html[data-design] .sidebar .storage-state {border-radius:7px;font-size:10px;padding:11px 9px}
+html[data-design] .main-shell {margin-left:216px;min-width:0}
+html[data-design] .topbar {padding:15px 36px;min-height:72px;background:var(--bg)}
+html[data-design] .search-box {border-radius:8px;background:var(--surface);width:210px}
+html[data-design] .topbar .icon-button {border-radius:8px}
+html[data-design] #content {max-width:1580px;margin-inline:auto;padding:28px 36px 52px}
+html[data-design] .atelier-masthead {display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 0 22px;margin-bottom:0;border-bottom:0}
+html[data-design] .atelier-masthead h1 {font:500 clamp(22px,2.3vw,34px)/1.1 Georgia,"Microsoft YaHei",serif;letter-spacing:-1px;margin:0}
+html[data-design] .atelier-masthead h1 em {font-weight:400}
+html[data-design] .atelier-masthead p {font:9px/1.6 Consolas,monospace;letter-spacing:2px;margin:9px 0 0;color:var(--muted)}
+html[data-design] .atelier-date {text-align:right;font:10px/1.8 Consolas,"Microsoft YaHei",monospace;color:var(--muted)}
+.atelier-date>span {display:flex;align-items:center;justify-content:flex-end;gap:7px;color:var(--ink);margin-bottom:3px}
+.atelier-date i {width:6px;height:6px;border-radius:50%;background:var(--primary)}
+html[data-design] .atelier-cover {position:relative;display:grid;grid-template-columns:1.1fr 1fr;gap:16px;min-height:370px;overflow:hidden;margin:0;border:1px solid var(--border);border-radius:20px;background:var(--surface);padding:38px 34px;isolation:isolate}
+html[data-design] .atelier-cover::before,html[data-design] .atelier-cover::after {display:none}
+html[data-design] .atelier-cover .hero-copy {position:relative;z-index:2;align-self:center;padding:0;min-width:0;max-width:none;width:auto}
+html[data-design] .atelier-kicker {display:flex;align-items:center;gap:12px;font:9px/1.6 Consolas,monospace;letter-spacing:1.5px;color:var(--muted)}
+.atelier-kicker::before {content:'';width:22px;height:1px;background:var(--primary)}
+html[data-design] .atelier-cover h2 {font:500 clamp(30px,3.6vw,56px)/1.28 "Songti SC",SimSun,Georgia,serif;letter-spacing:-1.5px;color:var(--ink);margin:20px 0 18px;white-space:normal}
+html[data-design] .atelier-cover h2 span {color:var(--primary);font-style:normal}
+html[data-design] .atelier-cover .hero-copy>p {font:12px/1.95 "Microsoft YaHei",sans-serif;color:var(--muted);margin:0;max-width:330px}
+html[data-design] .atelier-hero-actions {display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
+html[data-design] .atelier-hero-actions .button {min-height:40px;padding:10px 16px;font-size:12px;border-radius:8px}
+html[data-design] .atelier-cover .hero-visual {position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;inset:auto;width:100%;height:auto;min-width:0;min-height:290px;overflow:visible;background:none;transform:none;pointer-events:none;opacity:1;mask-image:none}
+.atelier-cover .hero-visual::before,.atelier-cover .hero-visual::after {display:none}
+.atelier-composition {display:block;width:100%;height:auto;max-width:440px;flex-shrink:0;overflow:visible;transform:rotate(-5deg);transition:transform .65s cubic-bezier(.22,1,.36,1)}
+html[data-design] .atelier-cover .hero-visual>svg {width:100%;height:auto;aspect-ratio:5/4;max-height:350px}
+.atelier-cover:hover .atelier-composition {transform:rotate(0deg) translateY(-5px)}
+.art-grid {stroke:var(--border);stroke-width:.8;opacity:.6}
+.art-float {transform-origin:center;animation:atelier-float 7s ease-in-out infinite}
+.art-orbit {transform-origin:center;animation:atelier-float 7s ease-in-out -3s infinite}
+.atelier-art-caption {display:flex;width:100%;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;font:8px/1.6 Consolas,monospace;letter-spacing:1.5px;color:var(--muted)}
+html[data-design] .atelier-cover .gallery-margin {display:none}
+html[data-design] .gallery-ledger {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border:0;margin:16px 0 30px;padding:0;background:none}
+html[data-design] .gallery-ledger .stat-card {position:relative;padding:18px 20px!important;border:1px solid var(--border);border-radius:12px;background:var(--surface);min-height:100px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;transition:transform .2s,border-color .2s}
+html[data-design] .gallery-ledger .stat-card:hover {transform:translateY(-3px);border-color:var(--primary)}
+html[data-design] .gallery-ledger .stat-label {font:11px/1.4 "Microsoft YaHei",sans-serif;color:var(--muted);white-space:normal}
+html[data-design] .gallery-ledger .stat-number {font:400 34px/1 Georgia,serif;letter-spacing:-1px;color:var(--ink)}
+html[data-design] .gallery-ledger .stat-arrow {display:block;position:absolute;right:17px;bottom:20px;width:17px;height:17px;color:var(--muted)}
+html[data-design] .gallery-desk {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:22px;align-items:start}
+html[data-design] .gallery-desk>.gallery-focus {padding:0;background:none;border:0}
+html[data-design] .gallery-side {padding:0;border:0;display:flex;flex-direction:column;gap:18px}
+html[data-design] .section-head {margin-bottom:18px;align-items:center;gap:12px}
+html[data-design] .section-head h2 {font:500 20px/1.4 "Songti SC",SimSun,Georgia,serif;letter-spacing:0;color:var(--ink)}
+html[data-design] .section-head h2 small {font:9px/1.5 Consolas,"Microsoft YaHei",monospace;color:var(--muted);display:inline;margin-left:10px}
+html[data-design] .section-head .text-button {font-size:11px}
+html[data-design] .atelier-section-no {display:inline-block;font:9px/1.4 Consolas,monospace;color:var(--muted);margin-right:10px;vertical-align:middle}
+html[data-design] .gallery-focus .task-list {display:flex;flex-direction:column;gap:10px;border:0}
+html[data-design] .gallery-focus .task-card {padding:20px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:block;transition:transform .18s,border-color .18s;min-width:0;min-height:0}
+html[data-design] .gallery-focus .task-card:hover {transform:translateX(3px);border-color:var(--primary)}
+html[data-design] .gallery-focus .task-top {margin:0 0 10px;display:flex;justify-content:space-between;gap:10px}
+html[data-design] .gallery-focus .task-title {font-size:15px;line-height:1.65;font-weight:500;display:block;overflow-wrap:anywhere}
+html[data-design] .gallery-focus .task-summary {display:block;font-size:11px;line-height:1.8;margin-top:7px}
+html[data-design] .gallery-focus .task-next {padding:9px 11px;margin-block:10px;font-size:11px;border-radius:5px;background:var(--surface-soft)}
+html[data-design] .gallery-focus .task-footer {display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px}
+html[data-design] .gallery-journal {position:relative;padding:24px;border:1px solid var(--border);border-radius:14px;background:var(--surface-soft);overflow:hidden}
+html[data-design] .gallery-journal::before {content:'';position:absolute;width:72px;height:72px;border:1px solid var(--border);border-radius:50%;right:-22px;top:56px}
+html[data-design] .gallery-journal .daily-feature-date {font:500 52px/1 Georgia,serif;margin:22px 0 18px;color:var(--ink);letter-spacing:-3px}
+html[data-design] .gallery-journal .daily-feature-date small {font:10px/1.5 Consolas,monospace;letter-spacing:1px;margin-left:12px}
+html[data-design] .gallery-journal h2 {font-size:16px;line-height:1.6}
+html[data-design] .gallery-journal>p {font-size:11px;line-height:1.9;margin-bottom:20px;color:var(--muted)}
+html[data-design] .gallery-shortcuts {padding:22px;border:1px solid var(--border)!important;border-radius:14px;background:var(--surface)}
+html[data-design] .gallery-shortcuts .section-head h2 {font-size:17px}
+html[data-design] .gallery-shortcuts .quick-link {padding:11px 0;border-bottom:1px solid var(--border);font-size:12px;background:none}
+html[data-design] .gallery-shortcuts .quick-link:last-child {border-bottom:0}
+html[data-design] .gallery-shelf {margin-top:32px;padding:0;border:0;background:none}
+html[data-design] .gallery-books {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+html[data-design] .gallery-books .note-card {padding:24px 22px 20px;min-height:188px;border:1px solid var(--border);border-top:4px solid var(--primary);border-radius:5px 5px 12px 12px;background:var(--surface);transition:transform .2s,box-shadow .2s}
+html[data-design] .gallery-books .note-card::before,html[data-design] .gallery-books .note-card::after {display:none}
+html[data-design] .gallery-books .note-card:hover {transform:translateY(-4px);box-shadow:0 12px 22px #0000000a}
+html[data-design] .gallery-books .note-card h3 {font-size:15px;line-height:1.65}
+html[data-design] .gallery-books .card-description {font-size:11px}
+html[data-design] .gallery-activity {margin-top:32px;padding-top:24px;border-top:1px solid var(--border);background:none}
+html[data-design] .gallery-activity .activity-list {gap:20px}
+html[data-design] .button,html[data-design] .icon-button,html[data-design] .filter-chip {transition:background .18s,color .18s,transform .18s,box-shadow .18s}
+html[data-design] .button {border-radius:8px;font-size:12px}
+html[data-design] .button:active {transform:translateY(1px)}
+html[data-design] .button.secondary {border-radius:8px;background:var(--surface)}
+html[data-design] .filter-chip {border-radius:7px;padding:8px 13px;font-size:12px}
+html[data-design] .filter-chip.active {background:var(--primary);color:var(--bg);border-color:var(--primary)}
+html[data-design] .toolbar {gap:14px;flex-wrap:wrap;padding:14px 0 20px;border:0}
+html[data-design] .local-search {border-radius:8px;background:var(--surface)}
+html[data-design] .page-header {border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:10px;gap:20px}
+html[data-design] .page-header h1 {font-size:34px;font-weight:500;letter-spacing:-1px}
+html[data-design] body[data-page="tasks"] #sortable-tasks {gap:16px}
+html[data-design] body[data-page="tasks"] #sortable-tasks>.task-card {position:relative;border-radius:12px;padding:23px;background:var(--surface);transition:border-color .18s,transform .18s,box-shadow .18s}
+html[data-design] body[data-page="tasks"] #sortable-tasks>.task-card::before {content:'';position:absolute;left:22px;right:22px;top:0;height:2px;background:var(--border)}
+html[data-design] body[data-page="tasks"] #sortable-tasks>.task-card[data-status="进行中"]::before {background:var(--primary)}
+html[data-design] body[data-page="tasks"] #sortable-tasks>.task-card:hover {transform:translateY(-3px);border-color:var(--primary);box-shadow:0 9px 22px #0000000a}
+html[data-design] .note-grid>.note-card,html[data-design] .card-grid>.link-card {border-radius:12px;padding:22px;border:1px solid var(--border);background:var(--surface)}
+html[data-design] dialog.modal {border:1px solid var(--border);border-radius:16px;box-shadow:0 24px 90px #0005}
+html[data-design] .modal-header {padding:22px 26px}
+html[data-design] .modal-body {padding:22px 26px}
+html[data-design] input,html[data-design] select,html[data-design] textarea {border-radius:7px}
+html[data-design] .task-status-select {border-radius:5px}
+html[data-design] .resource-tabs {margin-bottom:22px}
+html[data-design] .page-footer {padding:20px 36px;font-size:10px}
+@keyframes atelier-float {0%,100%{translate:0 0}50%{translate:0 -7px}}
+@media(min-width:761px){
+ html[data-design] body.sidebar-collapsed .sidebar {width:76px;padding-inline:12px}
+ html[data-design] body.sidebar-collapsed .main-shell {margin-left:76px}
+}
+@media(max-width:1100px){
+ html[data-design] .atelier-cover {padding:28px 24px;min-height:330px}
+ html[data-design] .atelier-cover h2 {font-size:38px}
+ html[data-design] .atelier-cover .hero-visual {min-height:250px}
+ html[data-design] .gallery-desk {grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+ html[data-design] #content {padding-inline:26px}
+ html[data-design] .topbar {padding-inline:26px}
+}
+@media(max-width:760px){
+ html[data-design] .sidebar {width:244px}
+ html[data-design] .main-shell {margin-left:0}
+ html[data-design] .topbar {padding:14px 20px}
+ html[data-design] #content {padding:23px 20px 30px}
+ html[data-design] .atelier-cover {min-height:320px;grid-template-columns:1.2fr 1fr}
+ html[data-design] .atelier-cover h2 {font-size:34px}
+ html[data-design] .atelier-cover .hero-visual {min-height:220px}
+ html[data-design] .gallery-desk {grid-template-columns:1fr}
+ html[data-design] .gallery-side {display:grid;grid-template-columns:1fr 1fr}
+ html[data-design] .gallery-ledger .stat-card {padding:15px!important;min-height:90px}
+ html[data-design] .gallery-ledger .stat-number {font-size:29px}
+ html[data-design] .page-footer {padding:20px}
+}
+@media(max-width:600px){
+ html[data-design] .atelier-masthead {gap:12px;padding-bottom:18px}
+ html[data-design] .atelier-masthead h1 {font-size:25px}
+ html[data-design] .atelier-masthead p {font-size:8px;letter-spacing:1px}
+ html[data-design] .atelier-date {font-size:9px;max-width:120px}
+ html[data-design] .atelier-date>span {display:none}
+ html[data-design] .atelier-cover {grid-template-columns:1fr;padding:25px 23px 16px;gap:0;border-radius:15px;min-height:0}
+ html[data-design] .atelier-cover h2 {font-size:38px;line-height:1.25;margin:18px 0 14px}
+ html[data-design] .atelier-cover .hero-copy>p {font-size:11px;max-width:260px}
+ html[data-design] .atelier-cover .hero-visual {min-height:0;height:200px;margin-top:0}
+ .atelier-composition {max-width:280px;height:210px}
+ html[data-design] .atelier-cover .hero-visual>svg {width:280px;max-width:100%;height:210px}
+ .atelier-art-caption {display:none}
+ html[data-design] .atelier-hero-actions {margin-top:20px}
+ html[data-design] .gallery-ledger {grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0 26px}
+ html[data-design] .gallery-ledger .stat-card {min-height:84px;padding:14px 16px!important;gap:6px}
+ html[data-design] .gallery-ledger .stat-label {font-size:10px}
+ html[data-design] .gallery-ledger .stat-number {font-size:29px}
+ html[data-design] .gallery-side {display:flex}
+ html[data-design] .gallery-books {grid-template-columns:1fr;gap:12px}
+ html[data-design] .gallery-books .note-card {min-height:150px}
+ html[data-design] .gallery-focus .task-card {padding:18px}
+ html[data-design] .page-header {align-items:flex-start;flex-direction:column;gap:17px;padding-top:8px}
+ html[data-design] .page-header h1 {font-size:30px}
+ html[data-design] .page-header .header-actions {flex-wrap:wrap}
+ html[data-design] .toolbar .local-search {width:100%}
+ html[data-design] .gallery-activity .activity-list {grid-template-columns:1fr}
+ html[data-design] .mobile-navigation {background:var(--surface);border-top:1px solid var(--border)}
+ html[data-design] dialog.modal {border-radius:14px 14px 0 0}
+}
+@media(prefers-reduced-motion:reduce){
+ .art-float,.art-orbit {animation:none!important}
+ .atelier-composition {transition:none!important}
+ html[data-design] .task-card,html[data-design] .stat-card,html[data-design] .nav-item {transition:none!important}
+}

@@ -9,7 +9,7 @@ import { linksForTask,setTaskLinks,removeTaskLink } from './task-links.js';
 import { applyTheme,refreshVisuals,installSpotlight,animateReorder } from './ui-effects.js?v=themes-20261017';
 import { installAppPanel } from './install-app.js';
 import { cloudConnectionPanel,refreshConnectionPanel,setPendingSyncCheck,reconnectGithubSession } from './cloud-session.js?v=sync2-20261018';
-import { renderStudioDashboard } from './studio-dashboard.js?v=themes-20261017';
+import { renderStudioDashboard } from './studio-dashboard.js?v=stylekit-20261022';
 import {designFor,designs,themeChoices} from './appearance.js?v=themes-20261017';
 import { installDocumentDrop } from './document-drop.js';
 
