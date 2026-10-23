@@ -1,0 +1,1 @@
+export function SiteFooter(){return <footer className='border-t px-4 lg:px-6 py-5 text-xs text-muted-foreground flex justify-between gap-4'><span>Bing‘ House · 每一步，都算数。</span><a href='https://github.com/shadcnstore/shadcn-dashboard-landing-template' target='_blank' rel='noopener noreferrer'>基于 ShadcnStore 二次开发 ↗</a></footer>}

@@ -1,3 +1,21 @@
+# Bing‘ House · 工作空间
+
+当前 Pages 首页使用 `web/` 中基于 ShadcnStore 的 React/Vite 工作台；旧版仍在 `/classic/`，原磁盘服务源码继续保留。
+
+- 新版入口：https://yiquanchaoren1.github.io/work-home/
+- 旧版入口：https://yiquanchaoren1.github.io/work-home/classic/
+- 生产构建：根目录与web分别 `npm ci --ignore-scripts`，再运行 `node build-pages.mjs`。
+- 测试：根目录 `npm test`（原98项），build-pages另跑web的10项模型/schema检查；`tests/shadcn-cloud-e2e.mjs`需本机Playwright/Chrome，使用模拟私有仓库。
+- 云端工作资料仍保存在用户私有仓库。构建只发布客户端与空种子，绝不复制本机data或连接凭据。
+- 新旧界面共用原设备登录范围；选择“记住此设备”仅加密保存连接信息。独立阅读页从授权的父窗口只获得选中文档。
+- 首页打开、返回前台及前台每5分钟自动读取已归档摘要；有待保存修改/上传时跳过刷新，防止覆盖草稿。
+- 手机继续使用同一网址及原主屏幕App入口。可在新版页头查看安装说明，无工作内容离线缓存。
+- 兼容字段：事项dueDate/priority、settings.ui的浅深色配色与侧栏设置；共享校验器和旧版保存均保留它们。版本冲突继续拒绝覆盖。
+
+上游MIT许可与来源见 `web/LICENSE.md`、`web/UPSTREAM.md`。`web/public/legacy`及第三方运行资产由构建生成，不是独立的资料副本。
+
+---
+
 # 工作间 · 云端版
 
 个人工作事项、链接、文档和工作档案。保留原生绿色界面、拖动排序、快速状态、明暗主题、Markdown 编辑及独立文档阅读。

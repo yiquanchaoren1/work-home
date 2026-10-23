@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateBackup} from './public/legacy/store.js';
+const stamp='2026-10-23T00:00:00.000Z';
+const fixture=()=>({version:1,settings:{name:'Schema test'},tasks:[{id:'task',title:'Test',type:'work',status:'待开始',summary:'',nextStep:'',tags:[],pinned:false,createdAt:stamp,updatedAt:stamp}],notes:[],links:[],records:[],activity:[]});
+test('old file schema remains valid with no new metadata',()=>{assert.deepEqual(validateBackup(fixture()),fixture())});
+test('task due date and priority survive validation',()=>{const d=fixture();Object.assign(d.tasks[0],{dueDate:'2026-10-28',priority:'important'});assert.deepEqual(validateBackup(d),d)});
+test('impossible dates and unsupported priorities are rejected',()=>{for(const dueDate of ['2026-02-30','2026-13-01','tomorrow']){const d=fixture();d.tasks[0].dueDate=dueDate;assert.throws(()=>validateBackup(d))}const d=fixture();d.tasks[0].priority='urgent';assert.throws(()=>validateBackup(d))});
+test('paired light/dark variables and sidebar survive validation',()=>{const d=fixture();d.settings.ui={styles:{'--primary':'#456','--hub-font-size':'16px'},darkStyles:{'--primary':'#abc'},sidebar:{side:'right',variant:'floating',collapsible:'icon'}};assert.deepEqual(validateBackup(d),d)});
+test('unsupported CSS values and invalid sidebar configuration are rejected',()=>{for(const v of ['url(https://example.test/private)','red;display:none','<style>']){const d=fixture();d.settings.ui={darkStyles:{'--primary':v}};assert.throws(()=>validateBackup(d))}const d=fixture();d.settings.ui={sidebar:{side:'outside',variant:'sidebar',collapsible:'none'}};assert.throws(()=>validateBackup(d))});

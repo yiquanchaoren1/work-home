@@ -6,3 +6,12 @@ artifacts/
 *.tar.gz
 *.zip
 data/
+
+web/public/legacy/
+web/.preview-data/
+web/.preview-workspace/
+
+web/public/icons/
+web/public/manifest.webmanifest
+
+public/vendor/

@@ -53,6 +53,13 @@ export function validateBackup(value) {
     if(!['paper','experimental','gallery','porcelain'].includes(value.settings.design))throw new Error('settings.design 主题无效');
     result.settings.design=value.settings.design;
   }
+  if(value.settings.ui!==undefined){
+    const ui=value.settings.ui;if(!isObject(ui))throw new Error('外观设置无效');
+    const clean={};
+    for(const mode of ['styles','darkStyles'])if(ui[mode]!==undefined){if(!isObject(ui[mode])||Object.keys(ui[mode]).length>160)throw new Error('外观变量无效');clean[mode]={};for(const [key,val] of Object.entries(ui[mode])){if(!/^--[a-z0-9-]+$/.test(key)||typeof val!=='string'||val.length>300||/[;{}<>]|url\s*\(/i.test(val))throw new Error('外观变量包含不支持的值');clean[mode][key]=val;}}
+    if(ui.sidebar!==undefined){const b=ui.sidebar;if(!isObject(b)||!['left','right'].includes(b.side)||!['sidebar','floating','inset'].includes(b.variant)||!['icon','offcanvas','none'].includes(b.collapsible))throw new Error('侧栏设置无效');clean.sidebar={side:b.side,variant:b.variant,collapsible:b.collapsible};}
+    result.settings.ui=clean;
+  }
   const textFields = {
     tasks: ['title', 'type', 'status', 'summary', 'nextStep'],
     links: ['title', 'url', 'category', 'description'],
@@ -78,6 +85,10 @@ export function validateBackup(value) {
       for (const field of textFields[key]) {
         requireString(item[field], `${path}.${field}`, field === 'title');
         clean[field] = item[field];
+      }
+      if(key==='tasks'){
+        if(item.priority!==undefined){if(!['critical','important','normal','minor'].includes(item.priority))throw new Error('事项优先级无效');clean.priority=item.priority;}
+        if(item.dueDate!==undefined){if(typeof item.dueDate!=='string'||(item.dueDate&&!/^\d{4}-\d{2}-\d{2}$/.test(item.dueDate))||(item.dueDate&&new Date(item.dueDate+'T00:00:00Z').toISOString().slice(0,10)!==item.dueDate))throw new Error('截止日期无效');clean.dueDate=item.dueDate;}
       }
       if (key === 'links') clean.url = normalizeUrl(item.url);
       if(key==='tasks'&&item.linkIds!==undefined) {

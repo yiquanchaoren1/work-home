@@ -1,0 +1,5 @@
+import {useEffect} from 'react'
+import type {ReactNode} from 'react'
+import {ThemeProviderContext} from '@/contexts/theme-context'
+import {useWorkspace} from '@/hub/workspace'
+export function ThemeProvider({children}:{children:ReactNode}){const w=useWorkspace(),theme=w.data.settings.theme==='dark'?'dark':'light',styles=JSON.stringify((theme==='dark'?w.data.settings.ui?.darkStyles:w.data.settings.ui?.styles)||{});useEffect(()=>{document.documentElement.classList.toggle('dark',theme==='dark');document.documentElement.classList.toggle('light',theme==='light')},[theme]);useEffect(()=>{const root=document.documentElement;for(const key of Array.from(root.style))if(key.startsWith('--'))root.style.removeProperty(key);for(const [key,value] of Object.entries(JSON.parse(styles) as Record<string,string>))root.style.setProperty(key,value)},[styles,theme]);return <ThemeProviderContext.Provider value={{theme,setTheme:t=>w.save({...w.data,settings:{...w.data.settings,theme:t==='system'?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t}},'切换主题')}}>{children}</ThemeProviderContext.Provider>}
