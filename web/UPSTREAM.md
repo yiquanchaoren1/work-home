@@ -23,4 +23,4 @@ public/legacy contains copied, existing work-hub validation, private GitHub adap
 
 Unused upstream ecommerce, chat, mail, authentication examples and marketing analytics are not registered as working routes. No fabricated user revenue/chat/calendar events are presented as real work. Demo fixture content is visibly distinct from production data.
 
-Current scope/verification and migration boundaries: PREVIEW.md. This is a local prototype, not an already deployed replacement or a verified production data migration.
+Production uses the current UI at /work-home/. Only required shared data/storage/Markdown modules are shipped under legacy; the retired interface and /classic/ fallback are not published. Source history remains available. Browser tests use isolated fixtures and do not constitute real private-data or physical-phone acceptance.

@@ -1,4 +1,4 @@
-import {cpSync,mkdirSync,readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {cpSync,mkdirSync,readFileSync,readdirSync,writeFileSync,rmSync,lstatSync,existsSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
@@ -15,16 +15,12 @@ cpSync(path.join(root,'public/icons'),path.join(web,'public/icons'),{recursive:t
 cpSync(path.join(root,'public/manifest.webmanifest'),path.join(web,'public/manifest.webmanifest'));
 run('npm',['test'],web);
 run('npm',['run','build'],web,{VITE_BASE:'/work-home/',VITE_WORKSPACE_MODE:'github'});
-run(process.execPath,['build-cloud.mjs']);
-const out=path.join(root,'dist-cloud'),classic=path.join(out,'classic');mkdirSync(classic,{recursive:true});
-for(const name of readdirSync(out))if(name!=='classic')cpSync(path.join(out,name),path.join(classic,name),{recursive:true});
-// The classic interface and new interface share the original device-login scope.
-const sessionFile=path.join(classic,'cloud-session.js');
-let session=readFileSync(sessionFile,'utf8').replace('createDeviceSession(appRoot)','createDeviceSession(new URL("../",import.meta.url))').replace("appRoot.pathname) : null","new URL('../',import.meta.url).pathname) : null");
-writeFileSync(sessionFile,session);
+const out=path.resolve(root,'dist-cloud');
+if(path.dirname(out)!==root||path.basename(out)!=='dist-cloud'||(existsSync(out)&&lstatSync(out).isSymbolicLink()))throw Error('Invalid Pages output directory');
+// Replace the complete artifact; retired root/classic HTML must not survive a rebuild.
+rmSync(out,{recursive:true,force:true});
 cpSync(path.join(web,'dist'),out,{recursive:true});
-// Revalidate schema in already-bookmarked classic readers after this deployment.
-for(const folder of [out,classic,path.join(out,'legacy')])for(const name of readdirSync(folder))if(name.endsWith('.js')){const file=path.join(folder,name),text=readFileSync(file,'utf8');writeFileSync(file,text.replace(/store\.js\?v=[a-zA-Z0-9-]+/g,'store.js?v=rich-20261023'))}
-writeFileSync(path.join(out,'release.json'),JSON.stringify({ui:'shadcnstore',source:process.env.GITHUB_SHA||'local',base:'/work-home/',classic:'./classic/'}));
+for(const name of readdirSync(path.join(out,'legacy')))if(name.endsWith('.js')){const file=path.join(out,'legacy',name),text=readFileSync(file,'utf8');writeFileSync(file,text.replace(/store\.js\?v=[a-zA-Z0-9-]+/g,'store.js?v=rich-20261023'))}
+writeFileSync(path.join(out,'release.json'),JSON.stringify({ui:'shadcnstore',source:process.env.GITHUB_SHA||'local',base:'/work-home/'}));
 writeFileSync(path.join(out,'.nojekyll'),'');
-console.log('Built private-data client at /work-home/ with classic fallback. No workspace or credentials included.');
+console.log('Built current UI only at /work-home/. Private data and retired interfaces excluded.');
