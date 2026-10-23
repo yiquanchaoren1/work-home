@@ -15,3 +15,7 @@ web/public/icons/
 web/public/manifest.webmanifest
 
 public/vendor/
+
+# Upstream UI fixtures and task column definitions are source, not runtime workspace data.
+!web/src/**/data/
+!web/src/**/data/**
