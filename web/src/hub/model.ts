@@ -18,3 +18,8 @@ export function reorderTasks(tasks:Task[],visibleIds:string[],active:string,over
 export function replaceTask(data:Workspace,task:Task):Workspace {
  return {...data,tasks:data.tasks.some(t=>t.id===task.id)?data.tasks.map(t=>t.id===task.id?task:t):[...data.tasks,task]}
 }
+export function removeTask(data:Workspace,id:string):Workspace {
+ if(!data.tasks.some(task=>task.id===id))return data
+ const detach=<T,>(items:T[])=>items.map(item=>item!==null&&typeof item==='object'&&'taskId'in item&&item.taskId===id?{...item,taskId:''}:item)
+ return {...data,tasks:data.tasks.filter(task=>task.id!==id),links:detach(data.links),notes:detach(data.notes),records:detach(data.records)}
+}

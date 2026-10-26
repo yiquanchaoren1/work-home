@@ -18,4 +18,4 @@ export const columns:ColumnDef<DataTableFeatures,Task>[]=[
 {accessorKey:'dueDate',header:({column})=><DataTableColumnHeader column={column} title='截止日期'/>,cell:({row})=>row.original.dueDate||'—'},
 {accessorKey:'updatedAt',header:({column})=><DataTableColumnHeader column={column} title='最近更新'/>,cell:({row})=>new Date(row.original.updatedAt).toLocaleDateString('zh-CN')},
 {id:'actions',cell:({row})=><EditAction task={row.original}/>,enableSorting:false}]
-function EditAction({task}:{task:Task}){const w=useWorkspace();return <Button variant='ghost' size='sm' onClick={()=>w.setEditTask(task)}>编辑</Button>}
+function EditAction({task}:{task:Task}){const w=useWorkspace();return <div className='flex items-center gap-1'><Button variant='ghost' size='sm' onClick={()=>w.setEditTask(task)}>编辑</Button><Button variant='destructive' size='sm' onClick={()=>w.setPendingDeleteTask(task)} aria-label={'删除 '+task.title}>删除</Button></div>}
