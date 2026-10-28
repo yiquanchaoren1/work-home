@@ -10,7 +10,7 @@ export function taskWithTimes(incoming:Task,previous:Task|undefined,now=new Date
  const saved={...previous,...incoming,createdAt:previous?.createdAt||now,updatedAt:now}
  delete saved.completedAt
  if(incoming.status==='已完成'){
-  if(!previous||!['已完成','资料归档'].includes(previous.status))saved.completedAt=now
+  if(previous?.status!=='已完成'&&!(previous?.status==='资料归档'&&previous.completedAt))saved.completedAt=now
   else if(previous.completedAt)saved.completedAt=previous.completedAt
  }else if(incoming.status==='资料归档'&&previous?.completedAt)saved.completedAt=previous.completedAt
  return saved
