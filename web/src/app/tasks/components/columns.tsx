@@ -5,9 +5,10 @@ import {Checkbox} from '@/components/ui/checkbox'
 import {Button} from '@/components/ui/button'
 import {Badge} from '@/components/ui/badge'
 import {DataTableColumnHeader} from './data-table-column-header'
+import {formatTaskTime,completionTimeText} from '@/hub/model'
 import {useWorkspace} from '@/hub/workspace'
 import {statuses,priorities} from '../data/data'
-function EditCell({task}:{task:Task}){const w=useWorkspace();return <button className='font-medium hover:underline text-left' onClick={()=>w.setEditTask(task)}>{task.title}</button>}
+function EditCell({task}:{task:Task}){const w=useWorkspace();return <button className='font-medium hover:text-primary text-left whitespace-pre-wrap break-words' onClick={()=>w.setEditTask(task)}>{task.title}</button>}
 function StatusCell({task}:{task:Task}){const w=useWorkspace();return <select aria-label={task.title+'的状态'} value={task.status} onChange={e=>w.updateTask({...task,status:e.target.value})}>{statuses.map(s=><option key={s.value}>{s.value}</option>)}</select>}
 export const columns:ColumnDef<DataTableFeatures,Task>[]=[
 {id:'select',header:({table})=><Checkbox checked={table.getIsAllPageRowsSelected()} indeterminate={table.getIsSomePageRowsSelected()} onCheckedChange={v=>table.toggleAllPageRowsSelected(!!v)} aria-label='全选本页'/>,cell:({row})=><Checkbox checked={row.getIsSelected()} onCheckedChange={v=>row.toggleSelected(!!v)} aria-label={'选择 '+row.original.title}/>,enableSorting:false,enableHiding:false},
@@ -16,6 +17,8 @@ export const columns:ColumnDef<DataTableFeatures,Task>[]=[
 {accessorKey:'status',header:({column})=><DataTableColumnHeader column={column} title='状态'/>,cell:({row})=><StatusCell task={row.original}/>},
 {accessorKey:'priority',header:({column})=><DataTableColumnHeader column={column} title='优先级'/>,cell:({row})=>priorities.find(p=>p.value===row.original.priority)?.label||'普通',filterFn:(row,id,value)=>value.includes(row.getValue(id))},
 {accessorKey:'dueDate',header:({column})=><DataTableColumnHeader column={column} title='截止日期'/>,cell:({row})=>row.original.dueDate||'—'},
-{accessorKey:'updatedAt',header:({column})=><DataTableColumnHeader column={column} title='最近更新'/>,cell:({row})=>new Date(row.original.updatedAt).toLocaleDateString('zh-CN')},
+{accessorKey:'createdAt',header:({column})=><DataTableColumnHeader column={column} title='创建时间'/>,cell:({row})=><time className='text-xs whitespace-nowrap' dateTime={row.original.createdAt}>{formatTaskTime(row.original.createdAt)}</time>},
+{accessorKey:'updatedAt',header:({column})=><DataTableColumnHeader column={column} title='最后修改时间'/>,cell:({row})=><time className='text-xs whitespace-nowrap' dateTime={row.original.updatedAt}>{formatTaskTime(row.original.updatedAt)}</time>},
+{accessorKey:'completedAt',header:({column})=><DataTableColumnHeader column={column} title='完成时间'/>,cell:({row})=><span className='text-xs whitespace-nowrap'>{completionTimeText(row.original)}</span>},
 {id:'actions',cell:({row})=><EditAction task={row.original}/>,enableSorting:false}]
 function EditAction({task}:{task:Task}){const w=useWorkspace();return <div className='flex items-center gap-1'><Button variant='ghost' size='sm' onClick={()=>w.setEditTask(task)}>编辑</Button><Button variant='destructive' size='sm' onClick={()=>w.setPendingDeleteTask(task)} aria-label={'删除 '+task.title}>删除</Button></div>}

@@ -20,7 +20,7 @@ if(path.dirname(out)!==root||path.basename(out)!=='dist-cloud'||(existsSync(out)
 // Replace the complete artifact; retired root/classic HTML must not survive a rebuild.
 rmSync(out,{recursive:true,force:true});
 cpSync(path.join(web,'dist'),out,{recursive:true});
-for(const name of readdirSync(path.join(out,'legacy')))if(name.endsWith('.js')){const file=path.join(out,'legacy',name),text=readFileSync(file,'utf8');writeFileSync(file,text.replace(/store\.js\?v=[a-zA-Z0-9-]+/g,'store.js?v=rich-20261023'))}
+for(const name of readdirSync(path.join(out,'legacy')))if(name.endsWith('.js')){const file=path.join(out,'legacy',name),text=readFileSync(file,'utf8');writeFileSync(file,text.replace(/store\.js\?v=[a-zA-Z0-9-]+/g,'store.js?v=tasks-20261028'))}
 writeFileSync(path.join(out,'release.json'),JSON.stringify({ui:'shadcnstore',source:process.env.GITHUB_SHA||'local',base:'/work-home/'}));
 writeFileSync(path.join(out,'.nojekyll'),'');
 console.log('Built current UI only at /work-home/. Private data and retired interfaces excluded.');

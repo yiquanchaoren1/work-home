@@ -51,12 +51,12 @@ export function DataTableViewOptions<TData extends RowData>({
             .map((column) => {
               return (
                 <DropdownMenuCheckboxItem
-                  key={({category:'类型',status:'状态',priority:'优先级',dueDate:'截止日期',updatedAt:'最近更新'} as Record<string,string>)[column.id]||column.id}
+                  key={({category:'类型',status:'状态',priority:'优先级',dueDate:'截止日期',createdAt:'创建时间',updatedAt:'最后修改时间',completedAt:'完成时间'} as Record<string,string>)[column.id]||column.id}
                   className="capitalize cursor-pointer"
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {({category:'类型',status:'状态',priority:'优先级',dueDate:'截止日期',updatedAt:'最近更新'} as Record<string,string>)[column.id]||column.id}
+                  {({category:'类型',status:'状态',priority:'优先级',dueDate:'截止日期',createdAt:'创建时间',updatedAt:'最后修改时间',completedAt:'完成时间'} as Record<string,string>)[column.id]||column.id}
                 </DropdownMenuCheckboxItem>
               )
             })}

@@ -1,0 +1,3 @@
+import type {Task} from './model'
+import {formatTaskTime,completionTimeText} from './model'
+export function TaskTimes({task,compact=false}:{task:Task;compact?:boolean}){return <div className={compact?'task-times':'rounded-lg border bg-muted/20 p-3 text-xs'}><p className='mb-1 text-muted-foreground text-[10px]'>北京时间</p><dl aria-label='事项时间（北京时间）' className={compact?'space-y-1':'grid gap-3 sm:grid-cols-3'}>{[['创建',task.createdAt],['修改',task.updatedAt],['完成',task.completedAt]].map(([label,value])=><div key={label} className={compact?'flex flex-wrap gap-x-2 justify-between':'space-y-1'}><dt className='text-muted-foreground'>{label}</dt><dd>{value?<time dateTime={value}>{formatTaskTime(value)}</time>:label==='完成'?completionTimeText(task):'未记录'}</dd></div>)}</dl></div>}

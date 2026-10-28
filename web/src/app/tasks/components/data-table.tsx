@@ -69,7 +69,7 @@ export function DataTable<TData extends RowData>({
   return (
     <div className="flex flex-col gap-4">
       <DataTableToolbar table={table} />
-      {table.getSelectedRowModel().rows.length>0&&<div className="flex items-center flex-wrap gap-3 rounded-lg border p-3 bg-muted/40"><span>已选 {table.getSelectedRowModel().rows.length} 项</span>{['待开始','进行中','已完成','资料归档'].map(status=><Button key={status} size="sm" variant="outline" onClick={()=>{const ids=new Set(table.getSelectedRowModel().rows.map(r=>(r.original as {id:string}).id));w.save({...w.current.current,tasks:w.current.current.tasks.map(t=>ids.has(t.id)?{...t,status,updatedAt:new Date().toISOString()}:t)},'批量更新状态');setRowSelection({})}}>设为{status}</Button>)}</div>}
+      {table.getSelectedRowModel().rows.length>0&&<div className="flex items-center flex-wrap gap-3 rounded-lg border p-3 bg-muted/40"><span>已选 {table.getSelectedRowModel().rows.length} 项</span>{['待开始','进行中','已完成','资料归档'].map(status=><Button key={status} size="sm" variant="outline" onClick={()=>{const ids=new Set(table.getSelectedRowModel().rows.map(r=>(r.original as {id:string}).id));w.updateTasksStatus(ids,status);setRowSelection({})}}>设为{status}</Button>)}</div>}
       <div className="rounded-md border">
         <Table>
           <TableHeader>

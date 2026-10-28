@@ -1,9 +1,27 @@
-export type Task = { id: string; title: string; type: string; status: string; summary: string; nextStep: string; tags: string[]; pinned: boolean; linkIds?: string[]; dueDate?:string; priority?:string; createdAt: string; updatedAt: string }
+export type Task = { id: string; title: string; type: string; status: string; summary: string; nextStep: string; tags: string[]; pinned: boolean; linkIds?: string[]; dueDate?:string; priority?:string; completedAt?:string; createdAt: string; updatedAt: string }
 export type Note = { id: string; title: string; category: string; body: string; tags: string[]; taskId: string; pinned: boolean; format?: string; createdAt: string; updatedAt: string; attachment?: {id:string;name:string;type:string;size:number} }
 export type Link = {id:string;title:string;url:string;category:string;description:string}
 export type Archive = {id?:string;date?:string;title:string;body:string;updatedAt:string}
 export type Workspace = {version:number;settings:{name:string;theme?:string;design?:string;ui?:{styles?:Record<string,string>;darkStyles?:Record<string,string>;sidebar?:{side:'left'|'right';variant:'sidebar'|'floating'|'inset';collapsible:'offcanvas'|'icon'|'none'}}};tasks:Task[];notes:Note[];links:Link[];records:unknown[];activity:unknown[];dailyArchives?:Archive[];archiveDocuments?:Archive[];[key:string]:unknown}
 export const statuses = ['待开始','进行中','等待反馈','已完成','暂缓','资料归档']
+const editableTaskFields=['title','type','status','summary','nextStep','tags','pinned','linkIds','dueDate','priority'] as const
+export function taskWithTimes(incoming:Task,previous:Task|undefined,now=new Date().toISOString()):Task {
+ if(previous&&editableTaskFields.every(key=>JSON.stringify(incoming[key])===JSON.stringify(previous[key])))return previous
+ const saved={...previous,...incoming,createdAt:previous?.createdAt||now,updatedAt:now}
+ delete saved.completedAt
+ if(incoming.status==='已完成'){
+  if(!previous||!['已完成','资料归档'].includes(previous.status))saved.completedAt=now
+  else if(previous.completedAt)saved.completedAt=previous.completedAt
+ }else if(incoming.status==='资料归档'&&previous?.completedAt)saved.completedAt=previous.completedAt
+ return saved
+}
+const taskTimeFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'})
+export function formatTaskTime(value?:string):string {
+ if(!value||!Number.isFinite(Date.parse(value)))return '未记录'
+ const p=Object.fromEntries(taskTimeFormat.formatToParts(new Date(value)).map(part=>[part.type,part.value]))
+ return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}`
+}
+export function completionTimeText(task:Task){return task.completedAt?formatTaskTime(task.completedAt):['已完成','资料归档'].includes(task.status)?'未记录':'未完成'}
 export function visibleTasks(tasks:Task[],status:string,query:string) {
  const q=query.trim().toLocaleLowerCase()
  return tasks.filter(t=>(!status||t.status===status)&&(!q||[t.title,t.summary,...t.tags].join(' ').toLocaleLowerCase().includes(q)))

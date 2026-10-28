@@ -87,6 +87,7 @@ export function validateBackup(value) {
         clean[field] = item[field];
       }
       if(key==='tasks'){
+        if(item.completedAt!==undefined){requireDate(item.completedAt,`${path}.completedAt`);clean.completedAt=item.completedAt;}
         if(item.priority!==undefined){if(!['critical','important','normal','minor'].includes(item.priority))throw new Error('事项优先级无效');clean.priority=item.priority;}
         if(item.dueDate!==undefined){if(typeof item.dueDate!=='string'||(item.dueDate&&!/^\d{4}-\d{2}-\d{2}$/.test(item.dueDate))||(item.dueDate&&new Date(item.dueDate+'T00:00:00Z').toISOString().slice(0,10)!==item.dueDate))throw new Error('截止日期无效');clean.dueDate=item.dueDate;}
       }
