@@ -41,3 +41,9 @@ export function removeTask(data:Workspace,id:string):Workspace {
  const detach=<T,>(items:T[])=>items.map(item=>item!==null&&typeof item==='object'&&'taskId'in item&&item.taskId===id?{...item,taskId:''}:item)
  return {...data,tasks:data.tasks.filter(task=>task.id!==id),links:detach(data.links),notes:detach(data.notes),records:detach(data.records)}
 }
+
+export type TaskOrder = 'manual'|'completed-desc'|'completed-asc'
+export function orderTasks(tasks:Task[],order:TaskOrder):Task[]{
+ if(order==='manual')return tasks
+ return [...tasks].sort((a,b)=>{const left=Date.parse(a.completedAt||''),right=Date.parse(b.completedAt||'');if(!Number.isFinite(left))return Number.isFinite(right)?1:0;if(!Number.isFinite(right))return -1;return order==='completed-desc'?right-left:left-right})
+}

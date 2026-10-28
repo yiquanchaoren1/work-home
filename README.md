@@ -4,7 +4,7 @@ Pages 使用 `web/` 中基于 ShadcnStore 的工作台。当前只发布新界�
 
 - 正式入口：https://yiquanchaoren1.github.io/work-home/
 - 构建：根目录与web分别 `npm ci --ignore-scripts`，再运行 `node build-pages.mjs`。完整输出在dist-cloud；每次重建替换整个发布产物。
-- 测试：根目录 `npm test`（数据与存储98项），构建另跑web的21项检查；本机Playwright/Chrome运行 `node tests/shadcn-cloud-e2e.mjs`及`node tests/task-times-e2e.mjs`。
+- 测试：根目录 `npm test`（数据与存储98项），构建另跑web的23项检查；本机Playwright/Chrome运行 `node tests/shadcn-cloud-e2e.mjs`及`node tests/task-times-e2e.mjs`。
 - 工作资料仍保存在既定私有仓库，源资料与附件不参与公开构建。只有勾选记住设备时加密保存连接凭据；原根设备范围及manifest标识保留。
 - 工作事项支持卡片右上角、表格操作列、编辑窗口中的删除；确认后仅移除事项并解除关联，文档、附件、链接和工作记录保留。
 - 事项首次保存自动生成创建与修改时间；内容或状态修改更新修改时间，无变化保存不刷新时间。切换已完成记录完成时间，归档保留，重新开始清除当前完成时间；旧事项缺失的历史完成时间显示未记录，不推测补齐。卡片、表格与编辑窗口均显示北京时间，精确到秒。
@@ -14,3 +14,5 @@ Pages 使用 `web/` 中基于 ShadcnStore 的工作台。当前只发布新界�
 - 旧UI源码可从Git历史恢复，不删除任何本机工作资料、个人档案或附件。新增dueDate/priority/settings.ui继续保留。
 
 上游MIT许可与来源见 `web/LICENSE.md`、`web/UPSTREAM.md`。生成资产和依赖不提交到源码仓库。
+
+已完成卡片视图提供手动排序、最近完成在前、最早完成在前；时间缺失放最后。时间排序仅调整当前显示，切回手动恢复原有顺序；时间排序期间停用拖动，其他状态照常手动排序。表格可点击完成时间列排序。

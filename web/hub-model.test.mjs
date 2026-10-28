@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {reorderTasks,replaceTask,visibleTasks,removeTask,taskWithTimes,formatTaskTime} from './src/hub/model.ts';
+import {reorderTasks,replaceTask,visibleTasks,removeTask,taskWithTimes,formatTaskTime,orderTasks} from './src/hub/model.ts';
 const tasks=[{id:'a',title:'学习源码',status:'进行中',summary:'Host',tags:['框架']},{id:'hidden',title:'隐藏事项',status:'已完成',summary:'',tags:[]},{id:'b',title:'测试',status:'进行中',summary:'功能',tags:['QEMU']}];
 test('filter and query intersect without changing source order',()=>{assert.deepEqual(visibleTasks(tasks,'进行中','qemu').map(t=>t.id),['b']);assert.equal(visibleTasks(tasks,'已完成','源码').length,0);assert.equal(tasks[0].id,'a')});
 test('filtered reorder preserves hidden tasks and source objects',()=>{const result=reorderTasks(tasks,['a','b'],'b','a');assert.deepEqual(result.map(t=>t.id),['b','hidden','a']);assert.equal(result[0],tasks[2]);assert.equal(result[1],tasks[1]);assert.equal(tasks[0].id,'a')});
@@ -23,3 +23,6 @@ test('legacy completed tasks never get a fabricated completion time from ordinar
 test('task clock uses Shanghai date, seconds and midnight without browser timezone',()=>{assert.equal(formatTaskTime('2026-10-27T16:00:01.000Z'),'2026-10-28 00:00:01');assert.equal(formatTaskTime(undefined),'未记录');assert.equal(formatTaskTime('not-a-time'),'未记录')});
 
 test('explicit completion of an archived task without history stamps the current action',()=>{const archived={...draft,status:'资料归档'},done=taskWithTimes({...archived,status:'已完成'},archived,second);assert.equal(done.completedAt,second);assert.equal(done.updatedAt,second);assert.equal(done.createdAt,archived.createdAt)});
+
+test('completion ordering uses actual instants with stable ties and never mutates manual order',()=>{const t=[{id:'b',completedAt:'2026-10-28T09:00:00Z'},{id:'a',completedAt:'2026-10-28T16:00:00+08:00'},{id:'same',completedAt:'2026-10-28T08:00:00Z'}];assert.equal(orderTasks(t,'manual'),t);assert.deepEqual(orderTasks(t,'completed-desc').map(t=>t.id),['b','a','same']);assert.deepEqual(orderTasks(t,'completed-asc').map(t=>t.id),['a','same','b']);assert.deepEqual(t.map(t=>t.id),['b','a','same'])});
+test('completion ordering puts missing or invalid clocks last in either direction',()=>{const t=[{id:'missing'},{id:'bad',completedAt:'invalid'},{id:'valid',completedAt:first}];for(const order of ['completed-desc','completed-asc'])assert.deepEqual(orderTasks(t,order).map(t=>t.id),['valid','missing','bad']);assert.deepEqual(orderTasks([], 'completed-desc'),[])});
