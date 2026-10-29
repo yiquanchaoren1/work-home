@@ -1,3 +1,4 @@
+import {reconcileWorkspace} from './workspace-merge.js?v=sync-20261029';
 // Session memory only. Acknowledged data and pending edits never share a revision.
 const copy=value=>structuredClone(value);
 const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
@@ -35,15 +36,33 @@ export class BackgroundSync {
     if(!this.pending){this.#view=this.#validate(state.data);this.#error=undefined;}
     this.#outcome=this.pending?'pending':'synced';
   }
+  #reconcile(remote){
+    if(this.#confirmed.dataDir&&remote.dataDir!==this.#confirmed.dataDir)throw Object.assign(new Error('连接的资料仓库发生变化，草稿仍保留，未向其他仓库上传。'),{status:409});
+    if(remote.revision===this.#confirmed.revision)return;
+    if(equal(remote.data,this.#view)){this.#ack(remote,this.#version);this.#attempt=undefined;return;}
+    if(this.#attempt&&equal(remote.data,this.#attempt.data)){this.#ack(remote,this.#attempt.version);this.#attempt=undefined;return;}
+    const merged=this.#validate(reconcileWorkspace(this.#confirmed.data,this.#view,remote.data));
+    this.#confirmed=copy(remote);this.#view=merged;this.#attempt=undefined;
+    if(equal(merged,remote.data))this.#ack(remote,this.#version);
+  }
   async #run(){
     if(this.active||this.#error||!this.pending)return;
     this.#running=true;
-    const attempt={data:copy(this.#view),version:this.#version,revision:this.#confirmed.revision};this.#attempt=attempt;this.#emit();
-    try {
-      const state=await this.#write(attempt.data,attempt.revision);
-      this.#ack(state,attempt.version);this.#attempt=undefined;
-    }catch(error){this.#error=error;}
-    finally{this.#running=false;this.#emit();this.#schedule();}
+    try{
+      for(let round=0;round<2&&this.pending;round++){
+        if(this.#error)return;
+        const attempt={data:copy(this.#view),version:this.#version,revision:this.#confirmed.revision};this.#attempt=attempt;this.#emit();
+        try{
+          const state=await this.#write(attempt.data,attempt.revision);
+          this.#ack(state,attempt.version);this.#attempt=undefined;return;
+        }catch(error){
+          if(this.#error)return;
+          if(error.status!==409||round===1||!this.#read){this.#error=error;return;}
+          try{const remote=await this.#read();if(this.#error)return;this.#reconcile(remote);}
+          catch(reconcileError){this.#error=reconcileError;return;}
+        }
+      }
+    }finally{this.#running=false;this.#emit();this.#schedule();}
   }
   #settle(){
     if(!this.#error&&this.pending)return;
@@ -63,13 +82,9 @@ export class BackgroundSync {
     this.#checking=true;this.#emit();
     try {
       // A lost PUT response may already have committed. Read before retrying to avoid duplicates.
-      const remote=await this.#read();
-      if(this.#confirmed.dataDir&&remote.dataDir!==this.#confirmed.dataDir)throw Object.assign(new Error('连接的资料仓库发生变化，草稿仍保留，未向其他仓库上传。'),{status:409});
-      if(remote.revision!==this.#confirmed.revision){
-        if(equal(remote.data,this.#view)){this.#ack(remote,this.#version);this.#attempt=undefined;}
-        else if(this.#attempt&&equal(remote.data,this.#attempt.data)){this.#ack(remote,this.#attempt.version);this.#attempt=undefined;}
-        else throw conflict();
-      }
+      const priorError=this.#error,remote=await this.#read();
+      if(this.#error!==priorError)throw this.#error||conflict();
+      this.#reconcile(remote);
       this.#error=undefined;
     }catch(error){this.#error=error;}
     finally{this.#checking=false;this.#emit();this.#schedule();}

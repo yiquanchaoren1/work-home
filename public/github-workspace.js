@@ -50,7 +50,7 @@ export class GithubWorkspace {
     } catch { throw failure('无法连接 GitHub，未确认保存成功，请保留当前编辑后重试。', 503); }
     if (optional && response.status === 404) return null;
     if (!response.ok) {
-      if ([409,422].includes(response.status)) throw failure('其他设备已更新资料，本次没有覆盖。请保留草稿并重新载入。', 409);
+      if ([409,422].includes(response.status)) throw failure('其他设备已更新资料，本次没有覆盖。请重试保存以核对最新资料，当前草稿仍保留。', 409);
       if (response.status === 401) throw failure('GitHub 访问密钥已失效，请重新登录。', 401);
       if (response.status === 403 || response.status === 429) throw failure('GitHub 拒绝了操作：请检查密钥的 Contents 读写权限，或稍后重试。', response.status);
       throw failure(response.status === 404 ? '资料仓库或文件不存在，或密钥没有访问权限。' : `GitHub 操作失败（${response.status}）`, response.status);
@@ -110,7 +110,7 @@ export class GithubWorkspace {
   async save(data, revision) { return this.queue(() => this.saveNow(data, revision)); }
   async saveNow(data, revision) {
     const clean = validateBackup(data), current = await this.state();
-    if (current.revision !== revision) throw failure('其他设备已更新资料，本次没有覆盖。请保留草稿并重新载入。', 409);
+    if (current.revision !== revision) throw failure('其他设备已更新资料，本次没有覆盖。请重试保存以核对最新资料，当前草稿仍保留。', 409);
     for(const key of ['theme','design'])if(current.data.settings[key]&&!Object.hasOwn(clean.settings,key))clean.settings[key]=current.data.settings[key];
     const existing=current.data.notes.filter(n=>n.attachment).map(n=>n.attachment);
     const needed=new Map();

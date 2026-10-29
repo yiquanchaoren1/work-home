@@ -5,6 +5,29 @@ export type Archive = {id?:string;date?:string;title:string;body:string;updatedA
 export type Workspace = {version:number;settings:{name:string;theme?:string;design?:string;ui?:{styles?:Record<string,string>;darkStyles?:Record<string,string>;sidebar?:{side:'left'|'right';variant:'sidebar'|'floating'|'inset';collapsible:'offcanvas'|'icon'|'none'}}};tasks:Task[];notes:Note[];links:Link[];records:unknown[];activity:unknown[];dailyArchives?:Archive[];archiveDocuments?:Archive[];[key:string]:unknown}
 export const statuses = ['待开始','进行中','等待反馈','已完成','暂缓','资料归档']
 const editableTaskFields=['title','type','status','summary','nextStep','tags','pinned','linkIds','dueDate','priority'] as const
+export function reconcileTaskDraft(base:Task|undefined,draft:Task,latest:Task|undefined):Task {
+ if(!base){if(latest)throw Error('事项标识已存在，请重新新建；当前输入仍保留。');return draft}
+ if(!latest)throw Error('这个事项已在其他窗口删除，当前输入仍保留，请复制后另存。')
+ const merged={...latest}
+ for(const key of editableTaskFields){
+  const value=draft[key],before=base[key],current=latest[key]
+  if(JSON.stringify(value)===JSON.stringify(before))continue
+  if(JSON.stringify(current)!==JSON.stringify(before)&&JSON.stringify(current)!==JSON.stringify(value))throw Error('同一处事项内容已被其他窗口修改，当前输入仍保留，请先复制并核对。')
+  Object.assign(merged,{[key]:value})
+ }
+ return merged
+}
+export function reconcileNoteDraft(base:Note|undefined,draft:Note,latest:Note|undefined):Note {
+ if(!base){if(latest)throw Error('文档标识已存在，请重新新建；当前输入仍保留。');return draft}
+ if(!latest)throw Error('这份文档已在其他窗口删除，当前输入仍保留，请复制后另存。')
+ const merged={...latest}
+ for(const key of ['title','body','category','tags'] as const){
+  if(JSON.stringify(draft[key])===JSON.stringify(base[key]))continue
+  if(JSON.stringify(latest[key])!==JSON.stringify(base[key])&&JSON.stringify(latest[key])!==JSON.stringify(draft[key]))throw Error('同一处文档内容已被其他窗口修改，当前输入仍保留，请先复制并核对。')
+  Object.assign(merged,{[key]:draft[key]})
+ }
+ return merged
+}
 export function taskWithTimes(incoming:Task,previous:Task|undefined,now=new Date().toISOString()):Task {
  if(previous&&editableTaskFields.every(key=>JSON.stringify(incoming[key])===JSON.stringify(previous[key])))return previous
  const saved={...previous,...incoming,createdAt:previous?.createdAt||now,updatedAt:now}

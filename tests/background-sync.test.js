@@ -40,8 +40,8 @@ test('lost upload acknowledgement is reconciled without a duplicate write, inclu
 test('a conflicting remote version never gets overwritten and drafts survive unsuccessful reloads',async()=>{
   let remote=initial(),failRead=false,writes=0;
   const queue=new BackgroundSync({delay:0,read:async()=>{if(failRead)throw Error('read failed');return remote;},write:async()=>{writes++;throw Object.assign(Error('conflict'),{status:409});}});
-  queue.initialize(remote);queue.enqueue({...remote.data,title:'my draft'});await wait(5);
-  remote={revision:'other',data:{...remote.data,title:'someone else'}};await queue.retry();
+  queue.initialize(remote);const mine={...remote.data,title:'my draft'};remote={revision:'other',data:{...remote.data,title:'someone else'}};queue.enqueue(mine);await wait(5);
+  await queue.retry();
   assert.equal(queue.error.status,409);assert.equal(writes,1);assert.equal(queue.state.data.title,'my draft');assert.equal(remote.data.title,'someone else');
   failRead=true;await assert.rejects(queue.discardAndReload(),/read failed/);assert.equal(queue.pending,1);assert.equal(queue.state.data.title,'my draft');
   failRead=false;await queue.discardAndReload();assert.equal(queue.pending,0);assert.equal(queue.state.data.title,'someone else');
@@ -68,4 +68,46 @@ test('reconnection to a different repository cannot move pending data there even
   queue.initialize(base);queue.enqueue(remote.data);await wait(5);await queue.retry();
   assert.equal(queue.pending,1);assert.equal(queue.error.status,409);assert.match(queue.error.message,/其他仓库/);assert.equal(writes,1);
   await queue.discardAndReload();assert.equal(queue.pending,0);assert.equal(queue.state.metadata.dataDir,'private/other');assert.equal(writes,1);
+});
+
+test('a stale revision automatically reconciles independent changes using the freshly read revision',async()=>{
+  const base=initial();let remote={revision:'other',data:{...base.data,settings:{theme:'dark'}}};const writes=[];
+  const queue=new BackgroundSync({delay:0,read:async()=>remote,write:async(data,revision)=>{writes.push(revision);if(revision!==remote.revision)throw Object.assign(Error('stale'),{status:409});return remote={revision:'saved',data};}});
+  queue.initialize(base);queue.enqueue({...base.data,title:'Local task'});await queue.flush();
+  assert.deepEqual(writes,['r0','other']);assert.equal(remote.data.title,'Local task');assert.equal(remote.data.settings.theme,'dark');assert.equal(queue.pending,0);
+});
+
+test('edits made while remote reconciliation is reading are included in the save',async()=>{
+  const response=deferred(),base=initial();let remote={revision:'other',data:{...base.data,settings:{theme:'dark'}}},count=0;
+  const queue=new BackgroundSync({delay:0,read:async()=>response.promise,write:async(data,revision)=>{count++;if(revision!==remote.revision)throw Object.assign(Error('stale'),{status:409});return remote={revision:'saved',data};}});
+  queue.initialize(base);queue.enqueue({...base.data,title:'Local title'});await wait(5);queue.enqueue({...queue.state.data,status:'done'});response.resolve(remote);await queue.flush();
+  assert.equal(count,2);assert.equal(remote.data.title,'Local title');assert.equal(remote.data.status,'done');assert.equal(remote.data.settings.theme,'dark');
+});
+
+test('retry after a network failure reconciles independent remote updates without dropping the draft',async()=>{
+  const base=initial();let remote=base,offline=true;
+  const queue=new BackgroundSync({delay:0,read:async()=>remote,write:async(data,revision)=>{if(offline)throw Error('offline');assert.equal(revision,remote.revision);return remote={revision:'saved',data};}});
+  queue.initialize(base);queue.enqueue({...base.data,title:'Local draft'});await wait(5);remote={revision:'other',data:{...base.data,settings:{theme:'dark'}}};offline=false;await queue.retry();await queue.flush();
+  assert.equal(remote.data.title,'Local draft');assert.equal(remote.data.settings.theme,'dark');assert.equal(queue.pending,0);
+});
+
+test('continuous competing writes stop after one automatic reconciliation and retain the draft',async()=>{
+  const base=initial();let count=0,remote=base;
+  const queue=new BackgroundSync({delay:0,read:async()=>remote,write:async()=>{remote={revision:'r'+(++count),data:{...base.data,settings:{theme:'theme-'+count}}};throw Object.assign(Error('stale'),{status:409});}});
+  queue.initialize(base);queue.enqueue({...base.data,title:'Local draft'});await assert.rejects(queue.flush(),{status:409});await wait(5);
+  assert.equal(count,2);assert.equal(queue.pending,1);assert.equal(queue.draft().title,'Local draft');assert.equal(remote.data.title,'old');
+});
+
+test('a failed merged-data validation leaves both acknowledged base and local draft intact',async()=>{
+  const base=initial();let count=0;const remote={revision:'other',data:{...base.data,settings:{theme:'dark'}}};
+  const queue=new BackgroundSync({delay:0,read:async()=>remote,validate:data=>{if(data.title==='Local'&&data.settings.theme==='dark')throw Error('invalid combined references');return structuredClone(data);},write:async()=>{count++;throw Object.assign(Error('stale'),{status:409});}});
+  queue.initialize(base);queue.enqueue({...base.data,title:'Local'});await assert.rejects(queue.flush(),/invalid combined references/);
+  assert.equal(count,1);assert.equal(queue.state.revision,'r0');assert.equal(queue.draft().settings.theme,'light');assert.equal(queue.draft().title,'Local');
+});
+
+test('a session pause during reconciliation cannot be cleared by a late read',async()=>{
+  const response=deferred(),base=initial();let count=0;
+  const queue=new BackgroundSync({delay:0,read:async()=>response.promise,write:async()=>{count++;throw Object.assign(Error('stale'),{status:409});}});
+  queue.initialize(base);queue.enqueue({...base.data,title:'Local'});await wait(5);queue.pause();response.resolve({revision:'other',data:{...base.data,settings:{theme:'dark'}}});await wait(5);
+  assert.equal(count,1);assert.equal(queue.error.status,401);assert.equal(queue.pending,1);assert.equal(queue.draft().title,'Local');
 });

@@ -1,7 +1,7 @@
 import type { Workspace } from './model'
 export const cloudDeployment=import.meta.env.VITE_WORKSPACE_MODE==='github'
 const root=import.meta.env.BASE_URL
-const moduleAt=(name:string)=>import(/* @vite-ignore */ `${root}legacy/${name}.js?v=tasks-20261028`)
+const moduleAt=(name:string)=>import(/* @vite-ignore */ `${root}legacy/${name}.js?v=sync-20261029`)
 export const core=Promise.all([moduleAt('local-api'),moduleAt('background-sync'),moduleAt('store'),moduleAt('markdown')]).then(([api,sync,store,markdown])=>({api,...sync,...store,...markdown}))
 export type Envelope={data:Workspace;revision:string;dataDir:string}
 export type Client={label:string;read:()=>Promise<Envelope>;write:(data:Workspace,revision:string)=>Promise<Envelope>;upload:(file:File)=>Promise<unknown>;backup:()=>Promise<unknown>;personal:()=>Promise<string>;attachment:(file:unknown)=>Promise<string>}
